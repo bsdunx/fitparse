@@ -15,26 +15,27 @@
 #include "stdio.h"
 #include "string.h"
 
-#include "fit_product.h"
+#include "fit_config.h"
 #include "fit_crc.h"
+#include "fit_sdk.h"
 
 ///////////////////////////////////////////////////////////////////////
-// Private Function Prototypes 
+// Private Function Prototypes
 ///////////////////////////////////////////////////////////////////////
 
 void WriteFileHeader(FILE *fp);
 ///////////////////////////////////////////////////////////////////////
-// Creates a FIT file. Puts a place-holder for the file header on top of the file. 
+// Creates a FIT file. Puts a place-holder for the file header on top of the file.
 ///////////////////////////////////////////////////////////////////////
 
 void WriteMessageDefinition(FIT_UINT8 local_mesg_number, const void *mesg_def_pointer, FIT_UINT8 mesg_def_size, FILE *fp);
 ///////////////////////////////////////////////////////////////////////
-// Appends a FIT message definition (including the definition header) to the end of a file. 
+// Appends a FIT message definition (including the definition header) to the end of a file.
 ///////////////////////////////////////////////////////////////////////
 
 void WriteMessage(FIT_UINT8 local_mesg_number, const void *mesg_pointer, FIT_UINT8 mesg_size, FILE *fp);
 ///////////////////////////////////////////////////////////////////////
-// Appends a FIT message (including the message header) to the end of a file. 
+// Appends a FIT message (including the message header) to the end of a file.
 ///////////////////////////////////////////////////////////////////////
 
 void WriteData(const void *data, FIT_UINT8 data_size, FILE *fp);
@@ -44,14 +45,14 @@ void WriteData(const void *data, FIT_UINT8 data_size, FILE *fp);
 
 
 ///////////////////////////////////////////////////////////////////////
-// Private Variables 
+// Private Variables
 ///////////////////////////////////////////////////////////////////////
 
 static FIT_UINT16 data_crc;
 
 
 int main(void)
-{   
+{
    FILE *fp;
 
    data_crc = 0;
@@ -65,18 +66,18 @@ int main(void)
       Fit_InitMesg(fit_mesg_defs[FIT_MESG_FILE_ID], &file_id);
       file_id.type = FIT_FILE_SETTINGS;
       file_id.manufacturer = FIT_MANUFACTURER_GARMIN;
-      WriteMessageDefinition(0, fit_mesg_defs[FIT_MESG_FILE_ID], FIT_FILE_ID_MESG_DEF_SIZE, fp);  
-      WriteMessage(0, &file_id, FIT_FILE_ID_MESG_SIZE, fp);  
+      WriteMessageDefinition(0, fit_mesg_defs[FIT_MESG_FILE_ID], FIT_FILE_ID_MESG_DEF_SIZE, fp);
+      WriteMessage(0, &file_id, FIT_FILE_ID_MESG_SIZE, fp);
    }
-   
+
    // Write user profile message.
    {
       FIT_USER_PROFILE_MESG user_profile;
       Fit_InitMesg(fit_mesg_defs[FIT_MESG_USER_PROFILE], &user_profile);
       user_profile.gender = FIT_GENDER_FEMALE;
       user_profile.age = 35;
-      WriteMessageDefinition(0, fit_mesg_defs[FIT_MESG_USER_PROFILE], FIT_USER_PROFILE_MESG_DEF_SIZE, fp);  
-      WriteMessage(0, &user_profile, FIT_USER_PROFILE_MESG_SIZE, fp);  
+      WriteMessageDefinition(0, fit_mesg_defs[FIT_MESG_USER_PROFILE], FIT_USER_PROFILE_MESG_DEF_SIZE, fp);
+      WriteMessage(0, &user_profile, FIT_USER_PROFILE_MESG_SIZE, fp);
    }
 
    // Write CRC.
@@ -91,7 +92,7 @@ int main(void)
 }
 
 void WriteFileHeader(FILE *fp)
-{   
+{
    FIT_FILE_HDR file_header;
 
    file_header.header_size = FIT_FILE_HDR_SIZE;
@@ -100,23 +101,23 @@ void WriteFileHeader(FILE *fp)
    memcpy((FIT_UINT8 *)&file_header.data_type, ".FIT", 4);
    fseek (fp , 0 , SEEK_END);
    file_header.data_size = ftell(fp) - FIT_FILE_HDR_SIZE - sizeof(FIT_UINT16);
-   file_header.crc = FitCRC_Calc16(&file_header, FIT_STRUCT_OFFSET(crc, FIT_FILE_HDR));   
+   file_header.crc = FitCRC_Calc16(&file_header, FIT_STRUCT_OFFSET(crc, FIT_FILE_HDR));
 
    fseek (fp , 0 , SEEK_SET);
    fwrite((void *)&file_header, 1, FIT_FILE_HDR_SIZE, fp);
 }
-  
+
 void WriteMessageDefinition(FIT_UINT8 local_mesg_number, const void *mesg_def_pointer, FIT_UINT8 mesg_def_size, FILE *fp)
 {
    FIT_UINT8 header = local_mesg_number | FIT_HDR_TYPE_DEF_BIT;
    WriteData(&header, FIT_HDR_SIZE, fp);
-   WriteData(mesg_def_pointer, mesg_def_size, fp);  
+   WriteData(mesg_def_pointer, mesg_def_size, fp);
 }
 
 void WriteMessage(FIT_UINT8 local_mesg_number, const void *mesg_pointer, FIT_UINT8 mesg_size, FILE *fp)
 {
    WriteData(&local_mesg_number, FIT_HDR_SIZE, fp);
-   WriteData(mesg_pointer, mesg_size, fp);   
+   WriteData(mesg_pointer, mesg_size, fp);
 }
 
 void WriteData(const void *data, FIT_UINT8 data_size, FILE *fp)
