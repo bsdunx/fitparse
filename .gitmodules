@@ -1,0 +1,3 @@
+[submodule "lib/mxml"]
+	path = lib/mxml
+	url = git://github.com/scheibo/mxml
