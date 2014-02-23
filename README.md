@@ -1,5 +1,7 @@
 # fitparse
 
+![pre-alpha](http://img.shields.io/badge/status-pre--alpha-lightgrey.svg)
+
 ## Overview
 
 C parser for various fitness device file formats. fitparse enables reading and
