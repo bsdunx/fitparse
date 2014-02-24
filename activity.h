@@ -1,19 +1,12 @@
 #include <stdint.h>
 // TODO ifdef stuff...
-typedef struct {
-  //id; // startime
 
-  sport; // ENUM ?what about 'multi'
-  laps; // many points, always at least one
-  data_points;
-  //summary; // can include derived statistics (totalAscent, NP, avg)
-} Activity;
 
-typedef struct {
-  uint32_t timestamp; // s since Unix Epoch - maybe up to 64 bits?
-  int32_t latitude; // semicircles (?)
-  int32_t longitude; // semicircles (?)
-  uint32_t altitude; // altitude = 5 * m + 500
+typedef struct DataPoint{
+  uint32_t timestamp; // s since Unix Epoch UTC
+  double latitude; // semicircles (?)
+  double longitude; // semicircles (?)
+  int32_t altitude; // m
   uint32_t distance; // 100 *m
   uint32_t speed; // 1000* m/s
   uint16_t power; // watts
@@ -22,7 +15,21 @@ typedef struct {
   uint8_t cadence; // rpm
   uint8_t lr_balance; // ?
   int8_t temperature; // C
+  struct DataPoint *next;
 } DataPoint;
+
+typedef enum {
+  /* Swimming, */
+  Running,
+  Bicycling
+} Sport;
+
+typedef struct {
+  Sport sport;
+  uint32_t *laps; // array of timestamps, always at least one
+  DataPoint *data_points;
+  //summary; // can include derived statistics (totalAscent, NP, avg)
+} Activity;
 
 /*
  * torque, headwind, calories
