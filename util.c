@@ -20,7 +20,7 @@ int format_timestamp(char *buf, uint32_t timestamp) {
 int main(int argc, char *argv[]) {
   char date[] = "2014-02-23T14:35:18+01:00";
   char buf[21];
-  format_timestamp(&buf, parse_timestamp(date));
+  format_timestamp(buf, parse_timestamp(date));
   printf("%s\n", buf);
   return 0;
 }

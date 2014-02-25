@@ -1,3 +1,6 @@
 [submodule "lib/mxml"]
 	path = lib/mxml
 	url = git://github.com/scheibo/mxml
+[submodule "lib/date"]
+	path = lib/date
+	url = git://github.com/scheibo/date
