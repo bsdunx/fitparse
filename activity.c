@@ -1,11 +1,22 @@
 #include "activity.h"
 
 void activity_destroy(Activity *a) {
-  DataPoint *d, *next;
-  for (d = a->data_points; a; a = next) {
-    next = d->next;
+  DataPoint *d, *next_d;
+
+  /* delete all data points */
+  for (d = a->data_points; a; a = next_d) {
+    next_d = d->next_d;
     free(d);
   }
+  a->data_points = NULL;
+
+  /* delete all laps */
+  if (a->laps) {
+    free(a->laps);
+    a->laps = NULL;
+  }
+
+  /* delete activity */
   free(a);
 }
 
@@ -42,5 +53,15 @@ int activity_add_point(Activity *a, uint32_t timestamp, double latitude,
     a->last_point->next = a->last_point = d;
   }
 
+  return 0;
+}
+
+int activity_add_lap(uint32_t lap) {
+  if (activity->laps) {
+      // see if theres enough space else realloc
+  } else {
+    // alloc a certain amount of space
+  }
+  // add activity->laps[next] = lap;
   return 0;
 }

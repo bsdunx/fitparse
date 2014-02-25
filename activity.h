@@ -40,6 +40,8 @@ int activity_add_point(Activity *a, uint32_t timestamp, double latitude,
                        uint32_t speed, uint16_t power, int16_t grade,
                        uint8_t heart_rate, uint8_t cadence, uint8_t lr_balance,
                        int8_t temperature);
+int activity_add_lap(uint32_t lap);
+
 /*
  * torque, headwind, calories
  *
