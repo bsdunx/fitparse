@@ -1,5 +1,7 @@
+#ifndef _ACTIVITY_H_
+#define _ACTIVITY_H_
+
 #include <stdint.h>
-// TODO ifdef stuff...
 
 typedef struct DataPoint {
   uint32_t timestamp;  // s since Unix Epoch UTC
@@ -17,11 +19,39 @@ typedef struct DataPoint {
   struct DataPoint *next;
 } DataPoint;
 
+// TODO could also do these per lap
+typedef struct Summary {
+  cadence_avg;
+  heart_rate_avg;
+  temperature_avg;
+  lr_balance_avg;
+  // totals
+  calories;
+  distance;
+  elevation;
+  laps; // and summar per laps? not just count?
+  pace;
+  time;
+  time_elapsed;
+  ascent;
+  descent;
+
+  speed_avg;
+  speed_max;
+
+  power_avg; // 3s, 10s, 30s
+  power_max;
+  power_kj;
+
+  // coggans powers - IF, NP, TSS, W/kg
+} Summary;
+
+
 typedef enum {
-  NA,
   /* Swimming, */
   Running,
-  Bicycling
+  Bicycling,
+  UnknownSport
 } Sport;
 
 typedef struct {
@@ -29,8 +59,20 @@ typedef struct {
   uint32_t *laps;  // array of timestamps, always at least one
   DataPoint *data_points;
   DataPoint *last_point;
-  // summary; // can include derived statistics (totalAscent, NP, avg)
+  //Summary summary; // can include derived statistics (totalAscent, NP, avg)
+  //Summary * lap_summaries; // can include derived statistics (totalAscent, NP, avg)
 } Activity;
+
+typedef int (*ReadFn)(char *, Activity *);
+typedef int (*WriteFn)(char *, Activity *);
+
+typedef enum {
+  CSV,
+  GPX,
+  TCX,
+  FIT,
+  UnknownFileFormat
+} FileFormat;
 
 #define activity_new() \
   { NA, NULL, NULL }
@@ -42,33 +84,13 @@ int activity_add_point(Activity *a, uint32_t timestamp, double latitude,
                        int8_t temperature);
 int activity_add_lap(uint32_t lap);
 
-/*
- * torque, headwind, calories
- *
-  uint16_t vertical_oscillation; // 10 * mm,
-  uint16_t stance_time_percent; // 100 * percent,
-  uint16_t stance_time; // 10 * ms,
-  uint8_t left_torque_effectiveness; // 2 * percent,
-  uint8_t right_torque_effectiveness; // 2 * percent,
-  uint8_t left_pedal_smoothness; // 2 * percent,
-  uint8_t right_pedal_smoothness; // 2 * percent,
-  uint8_t combined_pedal_smoothness; // 2 * percent,
-*/
+int activity_read(Activity *activity, char *filename);
+int activity_write(Activity *activity, char *filename);
 
-/*
+/* helper functions - could just call the *_read or *_write function directly */
+int activity_read_format(Activity *activity, char *filename, FileFormat format);
+int activity_write_format(Activity *activity, char *filename, FileFormat format);
 
-TCX:
-
-activity: sport (RUnning, biking, other), id (dateTime), lap (starttime, total
-time, distance, max speed, calories, avg hr, max hr, cadence, trigger method,
-intensity, notes), notes,
-multi sport session (first sport, next sport)
-course point (time, position, alt metres)
-
-
-
-
-*/
 
 /*****************
  * Read all individual points and compare it to summary data
@@ -85,3 +107,5 @@ course point (time, position, alt metres)
  * FTP
  * weight (kg/lbs)
  */
+
+#endif /* _ACTIVITY_H_ */

@@ -6,15 +6,19 @@
 
 /*
 Activity *activity =  activity_new();
-int error = gpx_parse("file.gpx", &activity);
+int error = gpx_read("file.gpx", &activity);
 activity_destroy(activity);
 */
 
-int gpx_parse(char *filename, Activity *activity) {
+int gpx_read(char *filename, Activity *activity) {
   FILE *f = NULL;
   if (!(f = fopen(filename, "r"))) {
     return 1;
   }
+}
+
+int gpx_write(char *filename, Activity *activity) {
+  return 1;
 }
 
 /*
