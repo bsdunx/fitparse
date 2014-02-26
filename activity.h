@@ -4,22 +4,23 @@
 #include <stdint.h>
 
 typedef struct DataPoint {
-  uint32_t timestamp;  // s since Unix Epoch UTC
-  double latitude;     // semicircles (?)
-  double longitude;    // semicircles (?)
-  int32_t altitude;    // m
-  uint32_t distance;   // 100 *m
-  uint32_t speed;      // 1000* m/s
-  uint16_t power;      // watts
-  int16_t grade;       // 100 * %
-  uint8_t heart_rate;  // bpm
-  uint8_t cadence;     // rpm
-  uint8_t lr_balance;  // ?
-  int8_t temperature;  // C
+  uint32_t timestamp;  /* s since Unix Epoch UTC */
+  double latitude;     /* degrees */
+  double longitude;    /* degrees */
+  int32_t altitude;    /* m */
+  uint32_t distance;   /* 100 * m */
+  uint32_t speed;      /* 1000 * m/s */
+  uint16_t power;      /* watts */
+  int16_t grade;       /* 100 * % */
+  uint8_t heart_rate;  /* bpm */
+  uint8_t cadence;     /* rpm */
+  uint8_t lr_balance;  /* ? */
+  int8_t temperature;  /* C */
   struct DataPoint *next;
 } DataPoint;
 
-// TODO could also do these per lap
+/*
+ //TODO could also do these per lap
 typedef struct Summary {
   cadence_avg;
   heart_rate_avg;
@@ -45,6 +46,7 @@ typedef struct Summary {
 
   // coggans powers - IF, NP, TSS, W/kg
 } Summary;
+*/
 
 
 typedef enum {
@@ -56,11 +58,13 @@ typedef enum {
 
 typedef struct {
   Sport sport;
-  uint32_t *laps;  // array of timestamps, always at least one
+  uint32_t *laps;  /* TODO array of timestamps, always at least one */
   DataPoint *data_points;
   DataPoint *last_point;
+  /*
   //Summary summary; // can include derived statistics (totalAscent, NP, avg)
   //Summary * lap_summaries; // can include derived statistics (totalAscent, NP, avg)
+  */
 } Activity;
 
 typedef int (*ReadFn)(char *, Activity *);
@@ -75,7 +79,7 @@ typedef enum {
 } FileFormat;
 
 #define activity_new() \
-  { NA, NULL, NULL }
+  { UnknownSport, NULL, NULL }
 void activity_destroy(Activity *a);
 int activity_add_point(Activity *a, uint32_t timestamp, double latitude,
                        double longitude, int32_t altitude, uint32_t distance,

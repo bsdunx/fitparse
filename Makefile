@@ -1,7 +1,7 @@
 OPTIMIZATION ?= -O2
 DEBUG = -g -ggdb
 WARN = -Wall -pedantic
-CFLAGS += $(WARN) $(DEBUG)
+CFLAGS += $(WARN) $(DEBUG) -pthread
 
 #TARGET = fitparse
 #OBJECTS = activity.o fit.o tcx.o gpx.o
@@ -9,6 +9,12 @@ CFLAGS += $(WARN) $(DEBUG)
 default: util
 
 all: mxml date
+
+gpx: gpx.o mxml
+	$(CC) $< $(CFLAGS) -Llib/mxml -lmxml -o $@
+
+gpx.o: gpx.c gpx.h lib/mxml/mxml.h
+	$(CC) $(CFLAGS) -Ilib/mxml -c $< -o $@
 
 util: util.o date
 	$(CC) $< $(CFLAGS) -Llib/date -ldate -o $@
