@@ -1,2 +1,6 @@
 *.o
 util
+gpx
+fit
+tcx
+csv

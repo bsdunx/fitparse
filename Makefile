@@ -11,7 +11,7 @@ default: util
 all: mxml date
 
 gpx: gpx.o mxml
-	$(CC) $< $(CFLAGS) -Llib/mxml -lmxml -o $@
+	$(CC) $< $(CFLAGS) -static -Llib/mxml -lmxml -o $@
 
 gpx.o: gpx.c gpx.h lib/mxml/mxml.h
 	$(CC) $(CFLAGS) -Ilib/mxml -c $< -o $@
