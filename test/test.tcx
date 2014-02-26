@@ -1,0 +1,65 @@
+<?xml version="1.0" ?>
+<TrainingCenterDatabase xmlns="http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2 http://www.garmin.com/xmlschemas/TrainingCenterDatabasev2.xsd">
+	<Activities>
+		<Activity Sport="Biking">
+			<Id>2010-04-05T21:45:04Z</Id>
+			<Lap StartTime="2010-04-05T21:45:04Z">
+				<TotalTimeSeconds>5518.96</TotalTimeSeconds>
+				<DistanceMeters>45256.441406</DistanceMeters>
+				<MaximumSpeed>16.025002</MaximumSpeed>
+				<Calories>1575</Calories>
+				<Intensity>Active</Intensity>
+				<Cadence>74</Cadence>
+				<TriggerMethod>Manual</TriggerMethod>
+				<Track>
+					<Trackpoint>
+						<Time>2010-04-05T21:45:08Z</Time>
+						<Position>
+							<LatitudeDegrees>30.412026</LatitudeDegrees>
+							<LongitudeDegrees>-97.755223</LongitudeDegrees>
+						</Position>
+						<AltitudeMeters>265.095</AltitudeMeters>
+						<DistanceMeters>1.994</DistanceMeters>
+						<Cadence>56</Cadence>
+						<Extensions>
+							<TPX xmlns="http://www.garmin.com/xmlschemas/ActivityExtension/v2">
+								<Watts>172</Watts>
+							</TPX>
+						</Extensions>
+					</Trackpoint>
+			  </Track>
+			  <Extensions>
+					<LX xmlns="http://www.garmin.com/xmlschemas/ActivityExtension/v2">
+						<AvgWatts>148</AvgWatts>
+					</LX>
+				</Extensions>
+			</Lap>
+			<Creator xsi:type="Device_t">
+				<Name>EDGE705</Name>
+				<UnitId>3480921041</UnitId>
+				<ProductID>625</ProductID>
+				<Version>
+					<VersionMajor>3</VersionMajor>
+					<VersionMinor>10</VersionMinor>
+					<BuildMajor>0</BuildMajor>
+					<BuildMinor>0</BuildMinor>
+				</Version>
+			</Creator>
+		</Activity>
+	</Activities>
+	<Author xsi:type="Application_t">
+		<Name>EDGE705</Name>
+		<Build>
+			<Version>
+				<VersionMajor>3</VersionMajor>
+				<VersionMinor>10</VersionMinor>
+				<BuildMajor>0</BuildMajor>
+				<BuildMinor>0</BuildMinor>
+			</Version>
+			<Type>Release</Type>
+		</Build>
+		<LangID>EN</LangID>
+		<PartNumber>006-B0625-00</PartNumber>
+	</Author>
+</TrainingCenterDatabase>
+

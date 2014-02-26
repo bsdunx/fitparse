@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<gpx creator="GPS Visualizer http://www.gpsvisualizer.com/" version="1.0" xmlns="http://www.topografix.com/GPX/1/0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/0 http://www.topografix.com/GPX/1/0/gpx.xsd">
+<wpt lat="43.688452" lon="-116.303153">
+  <time>2010-03-21T21:55:01Z</time>
+  <name>Start</name>
+  <desc>2010-03-21 21:55:01</desc>
+</wpt>
+<trk>
+  <name>2010_03_21_16_28_34</name>
+  <desc>98:57 - 40.9km</desc>
+  <trkseg>
+    <trkpt lat="43.688452" lon="-116.303153">
+      <ele>786.994</ele>
+      <time>2010-03-21T21:55:01Z</time>
+    </trkpt>
+  </trkseg>
+</trk>
+</gpx>

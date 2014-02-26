@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<gpx xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd http://www.cluetrust.com/XML/GPXDATA/1/0 http://www.cluetrust.com/Schemas/gpxdata10.xsd" xmlns:gpxdata="http://www.cluetrust.com/XML/GPXDATA/1/0" version="1.1" creator="Movescount - http://www.movescount.com" xmlns="http://www.topografix.com/GPX/1/1">
+   <trk>
+      <name>Move</name>
+      <trkseg>
+         <trkpt lat="47.229716" lon="8.968257">
+            <ele>416</ele>
+            <time>2014-01-17T08:33:11.150Z</time>
+            <extensions>
+               <gpxdata:hr>92</gpxdata:hr>
+               <gpxdata:temp>20.7000007629395</gpxdata:temp>
+               <gpxdata:distance>12</gpxdata:distance>
+            </extensions>
+         </trkpt>
+      </trkseg>
+   </trk>
+</gpx>

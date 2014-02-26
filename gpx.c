@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <ctype.h>
 
 #include "activity.h"
 #include "mxml.h"
@@ -9,18 +10,25 @@ int error = gpx_read("file.gpx", &activity);
 activity_destroy(activity);
 */
 
+int allspace(const char *str) {
+  while (isspace(*str)) { str++; }
+  return !*str;
+}
+
 static void sax_cb(mxml_node_t *node, mxml_sax_event_t event, void *sax_data) {
   const char *name, *data;
-  int ws;
   if (event == MXML_SAX_ELEMENT_OPEN) {
     name = mxmlGetElement(node);
     fprintf(stderr, "open: <%s>\n", name);
   } else if (event == MXML_SAX_ELEMENT_CLOSE) {
     name = mxmlGetElement(node);
+    data = mxmlGetOpaque(node);
+    if (!allspace(data)) {
+      fprintf(stderr, "data: %d '%s'\n", mxmlGetType(node), data);
+    }
     fprintf(stderr, "close: </%s>\n", name);
   } else if (event == MXML_SAX_DATA) {
-    data = mxmlGetText(node, &ws);
-    fprintf(stderr, "data: '%s' (%d)\n", data, ws);
+    mxmlRetain(node);
   }
 }
 
@@ -30,7 +38,7 @@ int gpx_read(char *filename, Activity *activity) {
     return 1;
   }
 
-  mxmlSAXLoadFile(NULL, f, MXML_TEXT_CALLBACK, sax_cb, NULL);
+  mxmlSAXLoadFile(NULL, f, MXML_OPAQUE_CALLBACK, sax_cb, NULL);
 
   fclose(f);
   return 0;
