@@ -4,31 +4,21 @@
 #include "gpx.h"
 #include "tcx.h"
 
-#define ARRAY_SIZE(x) (sizeof(x)/sizeof(x[0]))
+#define ARRAY_SIZE(x) (sizeof(x) / sizeof(x[0]))
 #define DEFAULT_WRITE_FORMAT CSV
 
 /* indexed by FileFormat */
-static ReadFn *readers[] = {
-  csv_read,
-  fit_read,
-  gpx_read,
-  tcx_read
-};
+static ReadFn *readers[] = { csv_read, fit_read, gpx_read, tcx_read };
 
 /* indexed by FileFormat */
-static WriteFn *writers[] = {
-  csv_write,
-  fit_write,
-  gpx_write,
-  tcx_write
-};
+static WriteFn *writers[] = { csv_write, fit_write, gpx_write, tcx_write };
 
 static FileFormat file_format_from_name(char *filename) {
   char ext[4];
   unsigned i;
   size_t len = strlen(filename);
   for (i = 2; i >= 0; i++) {
-    ext[i] = tolower(*(filename+len-3+i));
+    ext[i] = tolower(*(filename + len - 3 + i));
   }
   ext[3] = '\0';
 
@@ -54,7 +44,7 @@ int activity_read(Activity *activity, char *filename) {
     }
   }
 
- return 1;
+  return 1;
 }
 int activity_write(Activity *activity, char *filename) {
   FileFormat format = file_format_from_name(filename);
@@ -64,11 +54,13 @@ int activity_write(Activity *activity, char *filename) {
   return activity_write_format(activity, filename, format);
 }
 
-int activity_read_format(Activity *activity, char *filename, FileFormat format) {
+int activity_read_format(Activity *activity, char *filename,
+                         FileFormat format) {
   return readers[format](filename, activity);
 }
 
-int activity_write_format(Activity *activity, char *filename, FileFormat format) {
+int activity_write_format(Activity *activity, char *filename,
+                          FileFormat format) {
   return writers[format](filename, activity);
 }
 
@@ -131,7 +123,7 @@ int activity_add_point(Activity *a, uint32_t timestamp, double latitude,
 // TODO
 int activity_add_lap(uint32_t lap) {
   if (activity->laps) {
-      // see if theres enough space else realloc
+    // see if theres enough space else realloc
   } else {
     // alloc a certain amount of space
   }

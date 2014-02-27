@@ -118,7 +118,13 @@ typedef struct {
 typedef int (*ReadFn)(char *, Activity *);
 typedef int (*WriteFn)(char *, Activity *);
 
-typedef enum { CSV, GPX, TCX, FIT, UnknownFileFormat } FileFormat;
+typedef enum {
+  CSV,
+  GPX,
+  TCX,
+  FIT,
+  UnknownFileFormat
+} FileFormat;
 
 #define activity_new() \
   { UnknownSport, NULL, NULL }
