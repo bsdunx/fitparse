@@ -6,7 +6,10 @@
 #include "mxml.h"
 #include "util.h"
 
-typedef enum { false, true } bool;
+typedef enum {
+  false,
+  true
+} bool;
 
 typedef struct {
   bool metadata;
@@ -67,19 +70,19 @@ static int sax_cb(mxml_node_t *node, mxml_sax_event_t event, void *sax_data) {
       state->data.altitude = (int32_t)(strtod(data, &end) * 1000);
       if (*end) state->data.altitude = UNSET_ALTITUDE;
     } else if (!strcmp(name, "gpxtpx:hr")) {
-      state->data.heart_rate = (uint8_t)strtod(data, &end);
+      state->data.heart_rate = (uint8_t) strtod(data, &end);
       if (*end) state->data.heart_rate = UNSET_HEART_RATE;
     } else if (!strcmp(name, "gpxdata:hr")) {
-      state->data.heart_rate = (uint8_t)strtod(data, &end);
+      state->data.heart_rate = (uint8_t) strtod(data, &end);
       if (*end) state->data.heart_rate = UNSET_HEART_RATE;
     } else if (!strcmp(name, "gpxdata:temp")) {
-      state->data.temperature = (int8_t)strtod(data, &end);
+      state->data.temperature = (int8_t) strtod(data, &end);
       if (*end) state->data.temperature = UNSET_TEMPERATURE;
     } else if (!strcmp(name, "gpxdata:cadence")) {
-      state->data.cadence = (uint8_t)strtod(data, &end);
+      state->data.cadence = (uint8_t) strtod(data, &end);
       if (*end) state->data.cadence = UNSET_CADENCE;
     } else if (!strcmp(name, "gpxdata:bikepower")) {
-      state->data.power = (uint16_t)strtod(data, &end);
+      state->data.power = (uint16_t) strtod(data, &end);
       if (*end) state->data.power = UNSET_POWER;
     } else if (!strcmp(name, "trkpt")) {
       /* TODO */
@@ -95,8 +98,8 @@ static int sax_cb(mxml_node_t *node, mxml_sax_event_t event, void *sax_data) {
 
 int gpx_read(char *filename, Activity *activity) {
   FILE *f = NULL;
-  State state = {false /* metadata */, true /* first_element */,
-                 true /* first_time */, UNSET_DATA_POINT};
+  State state = { false /* metadata */, true /* first_element */,
+                  true /* first_time */, UNSET_DATA_POINT };
   if (!(f = fopen(filename, "r"))) {
     return 1;
   }
