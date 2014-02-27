@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include <time.h>
 
+#include "util.h"
 #include "date.h"
 
 /* Parse an ISO_8601 timestamp */

@@ -6,24 +6,18 @@ CFLAGS += $(WARN) $(DEBUG) -pthread
 #TARGET = fitparse
 #OBJECTS = activity.o fit.o tcx.o gpx.o
 
-default: util
+default: gpx
 
-all: mxml date
+all: gpx
 
-gpx: gpx.o mxml
-	$(CC) $< lib/mxml/libmxml.a $(CFLAGS) -o $@
+gpx: gpx.o util.o lib/mxml/libmxml.a lib/date/libdate.a
+	$(CC) $^ $(CFLAGS) -o $@
 
 gpx.o: gpx.c gpx.h lib/mxml/mxml.h
 	$(CC) $(CFLAGS) -Ilib/mxml -c $< -o $@
 
-util: util.o date
-	$(CC) $< $(CFLAGS) -Llib/date -ldate -o $@
-
 util.o: util.c lib/date/date.h
 	$(CC) $(CFLAGS) -Ilib/date -c $< -o $@
-
-mxml: lib/mxml/libmxml.a
-date: lib/date/libdate.a
 
 lib/mxml/Makefile:
 	cd lib/mxml >/dev/null && ./configure >/dev/null
@@ -39,7 +33,7 @@ format:
 
 clean:
 	rm -rf *.o util
-	cd lib/mxml >/dev/null && git clean -f -d -x >/dev/null
+	cd lib/mxml >/dev/null && git clean -f -d -x >/dev/null && git checkout -- mxml.xml >/dev/null
 	cd lib/date >/dev/null && git clean -f -d -x >/dev/null
 
 .SILENT: lib/mxml/Makefile mxml clean
