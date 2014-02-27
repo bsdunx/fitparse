@@ -2,6 +2,7 @@
 #define _ACTIVITY_H_
 
 #include <stdint.h>
+#include <stdio.h> /* TODO for fprintf in print data point */
 #include <float.h>
 
 #define UNSET_TIMESTAMP UINT32_MAX
@@ -103,6 +104,9 @@ typedef enum {
   UnknownSport
 } Sport;
 
+/*****************
+ * Read all individual points and compare it to summary data
+ */
 typedef struct {
   Sport sport;
   uint32_t *laps; /* TODO array of timestamps, always at least one */
@@ -115,49 +119,11 @@ typedef struct {
   */
 } Activity;
 
-typedef int (*ReadFn)(char *, Activity *);
-typedef int (*WriteFn)(char *, Activity *);
-
-typedef enum {
-  CSV,
-  GPX,
-  TCX,
-  FIT,
-  UnknownFileFormat
-} FileFormat;
-
 #define activity_new() \
   { UnknownSport, NULL, NULL }
+
 void activity_destroy(Activity *a);
-int activity_add_point(Activity *a, uint32_t timestamp, double latitude,
-                       double longitude, int32_t altitude, uint32_t distance,
-                       uint32_t speed, uint16_t power, int16_t grade,
-                       uint8_t heart_rate, uint8_t cadence, uint8_t lr_balance,
-                       int8_t temperature);
-int activity_add_lap(uint32_t lap);
-
-int activity_read(Activity *activity, char *filename);
-int activity_write(Activity *activity, char *filename);
-
-/* helper functions - could just call the *_read or *_write function directly */
-int activity_read_format(Activity *activity, char *filename, FileFormat format);
-int activity_write_format(Activity *activity, char *filename,
-                          FileFormat format);
-
-/*****************
- * Read all individual points and compare it to summary data
- */
-
-/* Athlete:
- *
- * name
- * gender (TRIMp)
- * preferences (metric, imperial)
- * power zones
- * hr zones (hrr, hrmax)
- * critical power
- * FTP
- * weight (kg/lbs)
- */
+int activity_add_point(Activity *a, DataPoint *point);
+int activity_add_lap(Activity *a, uint32_t lap);
 
 #endif /* _ACTIVITY_H_ */

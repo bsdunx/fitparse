@@ -10,7 +10,7 @@ default: gpx
 
 all: gpx
 
-gpx: gpx.o util.o lib/mxml/libmxml.a lib/date/libdate.a
+gpx: gpx.o activity.o util.o lib/mxml/libmxml.a lib/date/libdate.a
 	$(CC) $^ $(CFLAGS) -o $@
 
 gpx.o: gpx.c gpx.h lib/mxml/mxml.h
@@ -18,6 +18,9 @@ gpx.o: gpx.c gpx.h lib/mxml/mxml.h
 
 util.o: util.c lib/date/date.h
 	$(CC) $(CFLAGS) -Ilib/date -c $< -o $@
+
+activity.o: activity.c
+	$(CC) $(CFLAGS) -c $< -o $@
 
 lib/mxml/Makefile:
 	cd lib/mxml >/dev/null && ./configure >/dev/null

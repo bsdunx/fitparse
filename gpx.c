@@ -105,34 +105,56 @@ int gpx_read(char *filename, Activity *activity) {
   }
 
   if (!mxmlSAXLoadFile(NULL, f, MXML_OPAQUE_CALLBACK, sax_cb, (void *)&state)) {
-    fprintf(stderr, "failed\n");
+    fprintf(stderr, "failed\n"); /* TODO */
     fclose(f);
     return 1;
   }
 
-  fprintf(stderr, "Made it\n");
+  fprintf(stderr, "Made it\n"); /* TODO */
 
   fclose(f);
   return 0;
 }
 
+static mxml_node_t *to_gpx_xml(Activity *activity) {
+  mxml_node_t *xml; /*, *gpx, *trk, *trkseg, *trkpt, *ele, *time, *hr, *temp,
+*cadence, *bikepower; */
+  DataPoint *data;
+
+  xml = mxmlNewXML("1.0");
+  for (data = activity->data_points; data; data = data->next) {
+    /* TODO */
+  }
+  return xml;
+}
+
 int gpx_write(char *filename, Activity *activity) {
-  /*FILE *f;
+  FILE *f;
   mxml_node_t *tree;
 
   f = fopen(filename, "w");
-  mxmlSaveFile(tree, f, MXML_NO_CALLBACK);
+  if (!(f = fopen(filename, "w")) || !(tree = to_gpx_xml(activity))) {
+    return 1;
+  }
+
+  if (mxmlSaveFile(tree, f, MXML_NO_CALLBACK) < 0) {
+    mxmlDelete(tree);
+    fclose(f);
+    return 1;
+  }
 
   mxmlDelete(tree);
   fclose(f);
-  return 0;*/
-  return 1;
+  return 0;
 }
 
 /* TODO */
 int main(int argc, char *argv[]) {
   Activity activity = activity_new();
-  int ret = gpx_read(argv[1], &activity);
-  /*activity_destroy(&activity);*/
-  return ret;
+  int err = gpx_read(argv[1], &activity);
+  if (!err && argc > 2) {
+    err = gpx_write(argv[2], &activity);
+  }
+  activity_destroy(&activity);
+  return err;
 }
