@@ -1,6 +1,20 @@
 #include <stdlib.h>
+#include <string.h>
 
 #include "activity.h"
+
+Activity *activity_new(void) {
+  Activity *a;
+  if (!(a = malloc(sizeof(*a)))) {
+    return NULL;
+  }
+  a->sport = UnknownSport;
+  a->laps = NULL; /* TODO */
+  a->data_points = a->last_point = NULL;
+  a->has_data = calloc(1, sizeof(*(a->has_data)));
+
+  return a;
+}
 
 void activity_destroy(Activity *a) {
   DataPoint *d, *next;
@@ -18,6 +32,10 @@ void activity_destroy(Activity *a) {
     a->laps = NULL;
   }
 
+  free(a->has_data);
+  a->has_data = NULL;
+
+  free(a);
   a = NULL;
 }
 
@@ -26,7 +44,7 @@ int activity_add_point(Activity *a, DataPoint *point) {
 
   /* TODO (don't malloc one point at a time...), also check return */
   DataPoint *d;
-  if (!(d = malloc(sizeof(d)))) {
+  if (!(d = malloc(sizeof(*d)))) {
     return 1;
   }
   /* TODO fill in inferred missing values a la gpx/tcx */

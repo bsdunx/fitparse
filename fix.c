@@ -12,8 +12,8 @@ int fix_gps(Activity *a) {
   double delta_latitude, delta_longitude;
 
   // ignore null or files without GPS data
-  if (!a || !a->data_points || !a->has_data.latitude ||
-      !a->has_data.longitude) { /* TODO add has_data */
+  if (!a || !a->data_points || !a->has_data->latitude ||
+      !a->has_data->longitude) { /* TODO add has_data */
     return -1;
   }
 

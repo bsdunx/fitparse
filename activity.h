@@ -34,15 +34,7 @@ typedef struct DataPoint {
   struct DataPoint *next;
 } DataPoint;
 
-#define UNSET_DATA_POINT                                                      \
-  {                                                                           \
-    UNSET_TIMESTAMP, UNSET_LATITUDE, UNSET_LONGITUDE, UNSET_ALTITUDE,         \
-        UNSET_DISTANCE, UNSET_SPEED, UNSET_POWER, UNSET_GRADE,                \
-        UNSET_HEART_RATE, UNSET_CADENCE, UNSET_LR_BALANCE, UNSET_TEMPERATURE, \
-        NULL                                                                  \
-  }
-
-#define CLEAR_DATA_POINT(d)              \
+#define UNSET_DATA_POINT(d)              \
   do {                                   \
     (d).timestamp = UNSET_TIMESTAMP;     \
     (d).latitude = UNSET_LATITUDE;       \
@@ -112,7 +104,7 @@ typedef struct {
   uint32_t *laps; /* TODO array of timestamps, always at least one */
   DataPoint *data_points;
   DataPoint *last_point;
-  DataPoint has_data;
+  DataPoint *has_data;
   /*
   //Summary summary; // can include derived statistics (totalAscent, NP, avg)
   //Summary * lap_summaries; // can include derived statistics (totalAscent, NP,
@@ -120,9 +112,7 @@ typedef struct {
   */
 } Activity;
 
-#define activity_new() \
-  { UnknownSport, NULL, NULL, NULL, {0} }
-
+Activity *activity_new(void);
 void activity_destroy(Activity *a);
 int activity_add_point(Activity *a, DataPoint *point);
 int activity_add_lap(Activity *a, uint32_t lap);
