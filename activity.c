@@ -65,7 +65,8 @@ int activity_add_point(Activity *a, DataPoint *point) {
   if (!a->data_points) {
     a->last_point = a->data_points = d;
   } else {
-    a->last_point->next = a->last_point = d;
+    a->last_point->next = d;
+    a->last_point = d;
   }
 
   return 0;

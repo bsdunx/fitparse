@@ -35,8 +35,9 @@ static int sax_cb(mxml_node_t *node, mxml_sax_event_t event, void *sax_data) {
     if (state->metadata) return 0;
 
     name = mxmlGetElement(node);
+
     if (state->first_element && strcmp(name, "gpx")) {
-      fprintf(stderr, "error\n");
+      fprintf(stderr, "error\n"); /* TODO */
       return 1; /* stop reading the file */
     }
 
@@ -104,6 +105,7 @@ static State *create_state(void) {
     return NULL;
   }
   UNSET_DATA_POINT(*(state->data));
+
   return state;
 }
 
@@ -124,7 +126,7 @@ int gpx_read(char *filename, Activity *activity) {
     return 1;
   }
 
-  if (!mxmlSAXLoadFile(NULL, f, MXML_OPAQUE_CALLBACK, sax_cb, (void *)&state)) {
+  if (!mxmlSAXLoadFile(NULL, f, MXML_OPAQUE_CALLBACK, sax_cb, (void *)state)) {
     fprintf(stderr, "failed\n"); /* TODO */
     destroy_state(state);
     fclose(f);
