@@ -6,11 +6,6 @@
 #include "mxml.h"
 #include "util.h"
 
-typedef enum {
-  false,
-  true
-} bool;
-
 typedef struct {
   bool metadata;
   bool first_element;

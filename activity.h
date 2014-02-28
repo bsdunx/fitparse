@@ -5,18 +5,26 @@
 #include <stdio.h> /* TODO for fprintf in print data point */
 #include <float.h>
 
-#define UNSET_TIMESTAMP UINT32_MAX
-#define UNSET_LATITUDE DBL_MAX
-#define UNSET_LONGITUDE DBL_MAX
-#define UNSET_ALTITUDE INT32_MAX
-#define UNSET_DISTANCE UINT32_MAX
-#define UNSET_SPEED UINT32_MAX
-#define UNSET_POWER UINT16_MAX
-#define UNSET_GRADE INT16_MAX
-#define UNSET_HEART_RATE UINT8_MAX
-#define UNSET_CADENCE UINT8_MAX
-#define UNSET_LR_BALANCE UINT8_MAX
-#define UNSET_TEMPERATURE INT8_MAX
+typedef enum {
+  false,
+  true
+} bool;
+
+typedef enum {
+  Timestamp,
+  Latitude,
+  Longitude,
+  Altitude,
+  Distance,
+  Speed,
+  Power,
+  Grade,
+  HeartRate,
+  Cadence,
+  LRBalance,
+  Temperature,
+  DataFieldCount
+} DataField;
 
 typedef struct DataPoint {
   uint32_t timestamp; /* s since Unix Epoch UTC */
@@ -33,6 +41,45 @@ typedef struct DataPoint {
   int8_t temperature; /* C */
   struct DataPoint *next;
 } DataPoint;
+
+typedef struct Summary {
+  unsigned lap; /* lap number 0 vs 1? */
+
+  uint8_t cadence_avg;
+  uint8_t heart_rate_avg;
+  int8_t temperature_avg;
+  uint8_t lr_balance_avg;
+
+  uint16_t calories;
+  uint32_t distance; /* 100 * m */
+  uint32_t elevation; /* 100 * m */
+  uint32_t time; /* s */
+  uint32_t time_elapsed; /* s */
+  uint32_t ascent; /* 100 * m */
+  uint32_t descent; /* 100 * m */
+  /* function to calc pace from speed */
+  uint32_t speed_avg; /* 1000 * m/s */
+  uint32_t speed_max; /* 1000 * m/s */
+
+  uint16_t power_avg; /* TODO 3s, 10s, 30s - for speed as well? */
+  uint16_t power_max;
+  uint16_t power_kj; /* TODO correct? */
+
+  /* TODO coggans powers - IF, NP, TSS, W/kg */
+} Summary;
+
+#define UNSET_TIMESTAMP UINT32_MAX
+#define UNSET_LATITUDE DBL_MAX
+#define UNSET_LONGITUDE DBL_MAX
+#define UNSET_ALTITUDE INT32_MAX
+#define UNSET_DISTANCE UINT32_MAX
+#define UNSET_SPEED UINT32_MAX
+#define UNSET_POWER UINT16_MAX
+#define UNSET_GRADE INT16_MAX
+#define UNSET_HEART_RATE UINT8_MAX
+#define UNSET_CADENCE UINT8_MAX
+#define UNSET_LR_BALANCE UINT8_MAX
+#define UNSET_TEMPERATURE INT8_MAX
 
 #define UNSET_DATA_POINT(d)              \
   do {                                   \
@@ -60,35 +107,6 @@ static inline void print_data_point(DataPoint *d) {
           d->lr_balance, d->temperature, (void *)d->next);
 }
 
-/*
- //TODO could also do these per lap
-typedef struct Summary {
-  cadence_avg;
-  heart_rate_avg;
-  temperature_avg;
-  lr_balance_avg;
-  // totals
-  calories;
-  distance;
-  elevation;
-  laps; // and summar per laps? not just count?
-  pace;
-  time;
-  time_elapsed;
-  ascent;
-  descent;
-
-  speed_avg;
-  speed_max;
-
-  power_avg; // 3s, 10s, 30s
-  power_max;
-  power_kj;
-
-  // coggans powers - IF, NP, TSS, W/kg
-} Summary;
-*/
-
 typedef enum {
   /* Swimming, */
   Running,
@@ -96,19 +114,29 @@ typedef enum {
   UnknownSport
 } Sport;
 
+
+typedef enum {
+  InvalidGPS,
+  Dropouts,
+  PowerSpikes,
+  HeartRateSpikes,
+  HeartRateDropouts,
+  DataErrorCount
+} DataError;
+
+
 /*****************
- * Read all individual points and compare it to summary data
+ * TODO Read all individual points and compare it to summary data
  */
 typedef struct {
   Sport sport;
   uint32_t *laps; /* TODO array of timestamps, always at least one */
   DataPoint *data_points;
   DataPoint *last_point;
-  DataPoint *has_data;
+  bool has_data[DataFieldCount];
+  unsigned errors[DataErrorCount];
   /*
-  //Summary summary; // can include derived statistics (totalAscent, NP, avg)
-  //Summary * lap_summaries; // can include derived statistics (totalAscent, NP,
-  avg)
+  //Summary *summaries; // laps + total can include derived statistics
   */
 } Activity;
 

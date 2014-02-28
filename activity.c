@@ -11,7 +11,8 @@ Activity *activity_new(void) {
   a->sport = UnknownSport;
   a->laps = NULL; /* TODO */
   a->data_points = a->last_point = NULL;
-  a->has_data = calloc(1, sizeof(*(a->has_data)));
+  memset(a->has_data, false, sizeof(a->has_data));
+  memset(a->errors, 0, sizeof(a->errors));
 
   return a;
 }
@@ -31,9 +32,6 @@ void activity_destroy(Activity *a) {
     free(a->laps);
     a->laps = NULL;
   }
-
-  free(a->has_data);
-  a->has_data = NULL;
 
   free(a);
   a = NULL;

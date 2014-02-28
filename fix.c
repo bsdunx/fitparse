@@ -6,14 +6,14 @@
 
 /* used to handle gaps in recording by inserting interpolated/zero samples to
  * ensure dataPoints are contiguous in time */
-int fix_gps(Activity *a) {
+int fix_invalid_gps(Activity *a);
   DataPoint *fill_data, *last_good = NULL;
   int errors = 0, last_good_index = -1, index = 0, fill_index;
   double delta_latitude, delta_longitude;
 
   // ignore null or files without GPS data
-  if (!a || !a->data_points || !a->has_data->latitude ||
-      !a->has_data->longitude) { /* TODO add has_data */
+  if (!a || !a->data_points || !a->has_data[Latitude] ||
+      !a->has_data[Longitude]) {
     return -1;
   }
 
@@ -62,9 +62,16 @@ int fix_gps(Activity *a) {
   }
 
   if (errors) {
-    a->errors->gps = errors; /* TODO add errors */
+    a->errors[InvalidGPS] = errors;
     return errors;
   } else {
     return 0;
   }
 }
+
+/*
+int fix_dropouts(Activity *a);
+int fix_power(Activity *a);
+int fix_heart_rate(Activity *a); // TODO probably needs HR max from athletes and other
+*/
+
