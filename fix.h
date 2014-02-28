@@ -7,7 +7,8 @@ int fix_gps(Activity *a);
 /*
 int fix_gaps(Activity *a);
 int fix_spikes(Activity *a);
-int fix_hr(Activity *a); // TODO probably needs HR max from athletes and other values?
+int fix_hr(Activity *a); // TODO probably needs HR max from athletes and other
+values?
 */
 
 #endif /* _FIX_H_ */

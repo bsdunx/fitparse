@@ -65,20 +65,16 @@ static int sax_cb(mxml_node_t *node, mxml_sax_event_t event, void *sax_data) {
       return 0;
     } else if (!strcmp(name, "time")) {
       state->data.timestamp = parse_timestamp(data);
-      if (!state->data.timestamp) state->data.timestamp = UNSET_TIMESTAMP;
     } else if (!strcmp(name, "ele")) {
       state->data.altitude = (int32_t)(strtod(data, &end) * 1000);
       if (*end) state->data.altitude = UNSET_ALTITUDE;
-    } else if (!strcmp(name, "gpxtpx:hr")) {
+    } else if (!strcmp(name, "gpxdata:hr") || !strcmp(name, "gpxtpx:hr")) {
       state->data.heart_rate = (uint8_t) strtod(data, &end);
       if (*end) state->data.heart_rate = UNSET_HEART_RATE;
-    } else if (!strcmp(name, "gpxdata:hr")) {
-      state->data.heart_rate = (uint8_t) strtod(data, &end);
-      if (*end) state->data.heart_rate = UNSET_HEART_RATE;
-    } else if (!strcmp(name, "gpxdata:temp")) {
+    } else if (!strcmp(name, "gpxdata:temp") || !strcmp(name, "gpxtpx:atemp")) {
       state->data.temperature = (int8_t) strtod(data, &end);
       if (*end) state->data.temperature = UNSET_TEMPERATURE;
-    } else if (!strcmp(name, "gpxdata:cadence")) {
+    } else if (!strcmp(name, "gpxdata:cadence") || !strcmp(name, "gpxtpx:cad")) {
       state->data.cadence = (uint8_t) strtod(data, &end);
       if (*end) state->data.cadence = UNSET_CADENCE;
     } else if (!strcmp(name, "gpxdata:bikepower")) {

@@ -5,6 +5,7 @@ CFLAGS += $(WARN) $(DEBUG) -pthread
 
 #TARGET = fitparse
 #OBJECTS = activity.o fit.o tcx.o gpx.o
+HEADERS = $(wildcard *.h)
 
 default: gpx
 
@@ -13,13 +14,13 @@ all: gpx
 gpx: gpx.o activity.o util.o lib/mxml/libmxml.a lib/date/libdate.a
 	$(CC) $^ $(CFLAGS) -o $@
 
-gpx.o: gpx.c gpx.h lib/mxml/mxml.h
+gpx.o: gpx.c gpx.h lib/mxml/mxml.h $(HEADERS)
 	$(CC) $(CFLAGS) -Ilib/mxml -c $< -o $@
 
-util.o: util.c lib/date/date.h
+util.o: util.c lib/date/date.h $(HEADERS)
 	$(CC) $(CFLAGS) -Ilib/date -c $< -o $@
 
-activity.o: activity.c
+activity.o: activity.c $(HEADERS)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 lib/mxml/Makefile:

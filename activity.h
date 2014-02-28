@@ -112,6 +112,7 @@ typedef struct {
   uint32_t *laps; /* TODO array of timestamps, always at least one */
   DataPoint *data_points;
   DataPoint *last_point;
+  DataPoint has_data;
   /*
   //Summary summary; // can include derived statistics (totalAscent, NP, avg)
   //Summary * lap_summaries; // can include derived statistics (totalAscent, NP,
@@ -120,7 +121,7 @@ typedef struct {
 } Activity;
 
 #define activity_new() \
-  { UnknownSport, NULL, NULL }
+  { UnknownSport, NULL, NULL, NULL, {0} }
 
 void activity_destroy(Activity *a);
 int activity_add_point(Activity *a, DataPoint *point);

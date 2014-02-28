@@ -4,32 +4,43 @@
 #include "activity.h"
 #include "fix.h"
 
-/* used to handle gaps in recording by inserting interpolated/zero samples to ensure dataPoints are contiguous in time */
+/* used to handle gaps in recording by inserting interpolated/zero samples to
+ * ensure dataPoints are contiguous in time */
 int fix_gps(Activity *a) {
   DataPoint *fill_data, *last_good = NULL;
   int errors = 0, last_good_index = -1, index = 0, fill_index;
   double delta_latitude, delta_longitude;
 
   // ignore null or files without GPS data
-  if (!a || !a->data_points || !a->has_data->latitude || !a->has_data->longitude) { /* TODO add has_data */
+  if (!a || !a->data_points || !a->has_data.latitude ||
+      !a->has_data.longitude) { /* TODO add has_data */
     return -1;
   }
 
   for (data = a->data_points; data; data = data->next, index++) {
     /* is this one decent? */
-    if (data->latitude >= -90 && data->latitude <= 90 && data->longitude >= -180 && data->longitude <= 180) {
+    if (data->latitude >= -90 && data->latitude <= 90 &&
+        data->longitude >= -180 && data->longitude <= 180) {
       if (last_good && (last_good->next != data)) {
         /* interpolate from last_good to here then set last_good to here */
-        delta_latitude = (data->latitude - last_good->latitude) / (double)(index-last_good_index);
-        delta_longitude = (data->longitude - last_good->longitude) / (double)(index-last_good_index);
-        for (fill_data = last_good->next, fill_index = last_good_index + 1; fill_data != data; fill_data = fill_data->next, fill_index++) {
-          fill_data->latitude = last_good->latitude + (double)((fill_index-last_good_index)*delta_latitude);
-          fill_data->longitude = last_good->longitude + (double)((fill_index-last_good_index)*delta_longitude);
+        delta_latitude = (data->latitude - last_good->latitude) /
+                         (double)(index - last_good_index);
+        delta_longitude = (data->longitude - last_good->longitude) /
+                          (double)(index - last_good_index);
+        for (fill_data = last_good->next, fill_index = last_good_index + 1;
+             fill_data != data; fill_data = fill_data->next, fill_index++) {
+          fill_data->latitude =
+              last_good->latitude +
+              (double)((fill_index - last_good_index) * delta_latitude);
+          fill_data->longitude =
+              last_good->longitude +
+              (double)((fill_index - last_good_index) * delta_longitude);
           errors++;
         }
       } else if (!last_good) {
         /* fill to front */
-        for (fill_data = a->data_points; fill_data != data; fill_data = fill_data->next) {
+        for (fill_data = a->data_points; fill_data != data;
+             fill_data = fill_data->next) {
           fill_data->latitude = data->latitude;
           fill_data->longitude = data->longitude;
           errors++;
