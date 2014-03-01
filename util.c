@@ -9,9 +9,7 @@
 uint32_t parse_timestamp(const char *date) {
   unsigned long timestamp;
   int offset;
-  return (parse_date_basic(date, &timestamp, &offset) < 0)
-    ? UNSET_TIMESTAMP
-    : (uint32_t) timestamp;
+  return (parse_date_basic(date, &timestamp, &offset) < 0) ? UNSET_FIELD : (uint32_t) timestamp;
 }
 
 int format_timestamp(char *buf, uint32_t timestamp) {

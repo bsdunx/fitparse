@@ -3,6 +3,26 @@
 
 #include "activity.h"
 
+#define alloc_nr(x) (((x)+16)*3/2)
+
+/*
+ * Realloc the buffer pointed at by variable 'x' so that it can hold
+ * at least 'nr' entries; the number of entries currently allocated
+ * is 'alloc', using the standard growing factor alloc_nr() macro.
+ *
+ * DO NOT USE any expression with side-effect for 'x', 'nr', or 'alloc'.
+ */
+#define ALLOC_GROW(x, nr, alloc) \
+	do { \
+		if ((nr) > alloc) { \
+			if (alloc_nr(alloc) < (nr)) \
+				alloc = (nr); \
+			else \
+				alloc = alloc_nr(alloc); \
+			x = realloc((x), alloc * sizeof(*(x))); \
+		} \
+	} while (0)
+
 Activity *activity_new(void) {
   Activity *a;
   if (!(a = malloc(sizeof(*a)))) {
@@ -10,7 +30,8 @@ Activity *activity_new(void) {
   }
   a->sport = UnknownSport;
   a->laps = NULL; /* TODO */
-  a->data_points = a->last_point = NULL;
+  a->data_points = NULL;
+  a->num_points = 0;
   memset(a->has_data, false, sizeof(a->has_data));
   memset(a->errors, 0, sizeof(a->errors));
 
@@ -18,14 +39,12 @@ Activity *activity_new(void) {
 }
 
 void activity_destroy(Activity *a) {
-  DataPoint *d, *next;
-
   /* delete all data points */
-  for (d = a->data_points; d; d = next) {
-    next = d->next;
-    free(d);
+  if (a->data_points) {
+    free(a->data_points);
+    a->data_points = NULL;
+    a->num_points = 0;
   }
-  a->data_points = NULL;
 
   /* delete all laps */
   if (a->laps) {
@@ -38,34 +57,19 @@ void activity_destroy(Activity *a) {
 }
 
 /* TODO make sure we infer missing values and do corrections */
-int activity_add_point(Activity *a, DataPoint *point) {
+int activity_add_point(Activity *a, DataPoint *dp) {
+  unsigned i;
 
-  /* TODO (don't malloc one point at a time...), also check return */
-  DataPoint *d;
-  if (!(d = malloc(sizeof(*d)))) {
+  ALLOC_GROW(a->data_points, a->num_points + 1, a->points_alloc);
+  if (!(a->data_points)) {
     return 1;
   }
-  /* TODO fill in inferred missing values a la gpx/tcx */
-  d->timestamp = point->timestamp;
-  d->latitude = point->latitude;
-  d->longitude = point->longitude;
-  d->altitude = point->altitude;
-  d->distance = point->distance;
-  d->speed = point->speed;
-  d->power = point->power;
-  d->grade = point->grade;
-  d->heart_rate = point->heart_rate;
-  d->cadence = point->cadence;
-  d->lr_balance = point->lr_balance;
-  d->temperature = point->temperature;
-  d->next = NULL;
 
-  if (!a->data_points) {
-    a->last_point = a->data_points = d;
-  } else {
-    a->last_point->next = d;
-    a->last_point = d;
+  /* TODO fill in inferred missing values a la gpx/tcx */
+  for (i = 0; i < DataFieldCount; i++) {
+    a->data_points[a->num_points].data[i] = dp->data[i];;
   }
+  a->num_points++;
 
   return 0;
 }
