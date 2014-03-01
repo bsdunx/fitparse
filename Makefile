@@ -1,27 +1,25 @@
 OPTIMIZATION ?= -O2
 DEBUG = -g -ggdb
 WARN = -Wall -pedantic
-CFLAGS += $(WARN) $(DEBUG) -pthread
+CFLAGS += $(WARN) $(DEBUG) -pthread -Ilib/mxml -Ilib/date
 
 #TARGET = fitparse
 #OBJECTS = activity.o fit.o tcx.o gpx.o
+OBJECTS = $(patsubst %.c, %.o, $(wildcard *.c))
 HEADERS = $(wildcard *.h)
+LIB_HEADERS = lib/mxml/mxml.h lib/date/libdate.h
+LIBS = lib/mxml/libmxml.a lib/date/libdate.a
 
-default: gpx
+default: test
 
-all: gpx
+all: test
 
-gpx: gpx.o activity.o util.o lib/mxml/libmxml.a lib/date/libdate.a
-	$(CC) $^ $(CFLAGS) -o $@
+test: $(OBJECTS) $(LIBS) $(HEADERS)
+	$(CC) $(OBJECTS) $(LIBS) -Wall -o $@
+	mkdir -p tests/out
 
-gpx.o: gpx.c gpx.h lib/mxml/mxml.h $(HEADERS)
-	$(CC) $(CFLAGS) -Ilib/mxml -c $< -o $@
-
-util.o: util.c lib/date/date.h $(HEADERS)
-	$(CC) $(CFLAGS) -Ilib/date -c $< -o $@
-
-activity.o: activity.c $(HEADERS)
-	$(CC) $(CFLAGS) -c $< -o $@
+test.o: test.c $(HEADERS)
+	$(CC) $(CFLAGS) -DDEBUG -DDEFAULT_DIR=tests/out -c $< -o $@
 
 lib/mxml/Makefile:
 	cd lib/mxml >/dev/null && ./configure >/dev/null
@@ -32,11 +30,14 @@ lib/mxml/libmxml.a: lib/mxml/Makefile
 lib/date/libdate.a:
 	$(MAKE) -C lib/date >/dev/null
 
+%.o: %.c $(HEADERS)
+	$(CC) $(CFLAGS) -c $< -o $@
+
 format:
 	-@clang-format -style=Google -i *.c *.h
 
 clean:
-	rm -rf *.o util
+	rm -rf *.o util tests/out test gpx
 	cd lib/mxml >/dev/null && git clean -f -d -x >/dev/null && git checkout -- mxml.xml >/dev/null
 	cd lib/date >/dev/null && git clean -f -d -x >/dev/null
 

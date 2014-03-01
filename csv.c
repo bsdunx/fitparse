@@ -1,7 +1,12 @@
+#include <string.h>
+#include <stdio.h>
+
 #include "csv.h"
 
+/* test empty option and remove = true... */
+
 static DataField name_to_field(char *name) {
-  // TODO convert name to lower case....
+  /* TODO convert name to lower case.... */
   if (!strcmp(name, "timestamp") || !strcmp(name, "time")) {
     return Timestamp;
   } else if (!strcmp(name, "latitude") || !strcmp(name, "lat")) {
@@ -41,11 +46,15 @@ static DataField name_to_field(char *name) {
  * all are doubles in base SI unit which we then convert into our format */
 int csv_read(char *filename, Activity *a) {
   FILE *f = NULL;
-  DataField data_fields[DataFieldCount];  // TODO worry all set to zero which is
-                                          // Timestamp
+  char buf[CSV_BUFSIZ], *comma, *last, field_str[CSV_FIELD_SIZE];
+  DataField data_fields[DataFieldCount], field;
   DataPoint point;
-  char buf[CSV_BUFSIZ];
+  unsigned i, count = 0;
 
+  /* initialize */
+  for (i = 0; i < DataFieldCount; i++) {
+    data_fields[i] = DataFieldCount;
+  }
   unset_data_point(&point);
 
   if (!(f = fopen(filename, "r"))) {
@@ -53,12 +62,27 @@ int csv_read(char *filename, Activity *a) {
   }
 
   /* make sure we can read the header */
-  if (!fget(buf, sizeof(buf), f)) {
+  if (!fgets(buf, sizeof(buf), f)) {
     return 1;
   }
 
-  // builder header array
+  for (last = buf, comma = strchr(buf, ','); count < DataFieldCount && comma; comma = strchr(last, ',')) {
+    strncpy(field_str, last, comma - last);
+    field_str[comma - last] = '\0';
 
+    if ((field = name_to_field(field_str))) {
+      data_fields[count] = field;
+      count++;
+    }
+
+    last = comma + 1;
+  }
+  if (count < DataFieldCount) {
+    name_to_field(last);
+  }
+
+  /*
+  // builder header array
   for (;;) {
 
     // read in array of doubles - IN ORDER
@@ -66,32 +90,32 @@ int csv_read(char *filename, Activity *a) {
     activity_add_point(a, &point);
     unset_data_point(&point);
   }
+  */
 
   fclose(f);
   return 0;
 }
 
-static int write_csv(FILE *f, const char *format, size_t i, DataField f,
+static void write_field(FILE *f, const char *format, size_t i, DataField field,
                      Activity *a, CSVOptions o, bool *first) {
   double d = a->data_points[i].data[field];
   if (!o.remove_unset || a->has_data[field]) {
+   if (!*first) {
+      fprintf(f, ",");
+    }
     if (d == UNSET_FIELD) {
       fprintf(f, "%s", o.unset_value);
     } else {
       fprintf(f, format, d);
     }
-    if (!*first) {
-      fprintf(f, ",");
-    }
     *first = false;
   }
 }
 
-int csv_write(char *filename, Activity *a, CSVOptions o) {
+int csv_write_options(char *filename, Activity *a, CSVOptions o) {
   FILE *f = NULL;
   unsigned i;
   bool first = true;
-  DataPoint *d;
 
   if (!(f = fopen(filename, "w"))) {
     return 1;
@@ -101,28 +125,29 @@ int csv_write(char *filename, Activity *a, CSVOptions o) {
   for (i = 0; i < DataFieldCount; i++) {
     if (!o.remove_unset || a->has_data[i]) {
       if (first) {
-        fprintf(f, "%s" DATA_FIELDS[i]);
+        fprintf(f, "%s", DATA_FIELDS[i]);
         first = false;
       } else {
-        fprintf(f, ",%s" DATA_FIELDS[i]);
+        fprintf(f, ",%s", DATA_FIELDS[i]);
       }
     }
   }
   fprintf(f, "\n");
 
-  for (i = 0; i < a->num_points; i++, first = true) {
-    CSV(f, "%.0f", i, Timestamp, a, &o, &first);
-    CSV(f, "%.15f", i, Latitude, a, &o, &first);
-    CSV(f, "%.15f", i, Longitude, a, &o, &first);
-    CSV(f, "%.3f", i, Altitude, a, &o, &first);
-    CSV(f, "%.2f", i, Distance, a, &o, &first);
-    CSV(f, "%.2f", i, Speed, a, &o, &first);
-    CSV(f, "%.0f", i, Power, a, &o, &first);
-    CSV(f, "%.2f", i, Grade, a, &o, &first);
-    CSV(f, "%.0f", i, HeartRate, a, &o, &first);
-    CSV(f, "%.0f", i, Cadence, a, &o, &first);
-    CSV(f, "%.0f", i, LRBalance, a, &o, &first);
-    CSV(f, "%.0f", i, Temperature, a, &o, &first);
+	/* print data points - must be at least one non empty */
+  for (i = 0, first = true; i < a->num_points; i++, first = true) {
+    write_field(f, "%.0f", i, Timestamp, a, o, &first);
+    write_field(f, "%.15f", i, Latitude, a, o, &first);
+    write_field(f, "%.15f", i, Longitude, a, o, &first);
+    write_field(f, "%.3f", i, Altitude, a, o, &first);
+    write_field(f, "%.2f", i, Distance, a, o, &first);
+    write_field(f, "%.2f", i, Speed, a, o, &first);
+    write_field(f, "%.0f", i, Power, a, o, &first);
+    write_field(f, "%.2f", i, Grade, a, o, &first);
+    write_field(f, "%.0f", i, HeartRate, a, o, &first);
+    write_field(f, "%.0f", i, Cadence, a, o, &first);
+    write_field(f, "%.0f", i, LRBalance, a, o, &first);
+    write_field(f, "%.0f", i, Temperature, a, o, &first);
     fprintf(f, "\n");
   }
 

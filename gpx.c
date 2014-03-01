@@ -7,9 +7,10 @@
 #include "util.h"
 
 typedef struct {
+  Activity *activity;
   bool metadata;
   bool first_element;
-  bool first_time;
+  double first_time;
   DataPoint dp;
 } State;
 
@@ -64,6 +65,9 @@ static int sax_cb(mxml_node_t *node, mxml_sax_event_t event, void *sax_data) {
       return 0;
     } else if (!strcmp(name, "time")) {
       state->dp.data[Timestamp] = parse_timestamp(data);
+      if (state->first_time == UNSET_FIELD && state->dp.data[Timestamp] != UNSET_FIELD) {
+        state->first_time = state->dp.data[Timestamp];
+      }
     } else if (!strcmp(name, "ele")) {
       parse_field(Altitude, state, data);
     } else if (!strcmp(name, "gpxdata:hr") || !strcmp(name, "gpxtpx:hr")) {
@@ -76,8 +80,8 @@ static int sax_cb(mxml_node_t *node, mxml_sax_event_t event, void *sax_data) {
     } else if (!strcmp(name, "gpxdata:bikepower")) {
       parse_field(Power, state, data);
     } else if (!strcmp(name, "trkpt")) {
-      /* TODO */
-      print_data_point(&(state->dp));
+      activity_add_point(state->activity, &(state->dp));
+      /*print_data_point(&(state->dp)); [> TODO <]*/
       unset_data_point(&(state->dp));
     }
   } else if (event == MXML_SAX_DATA) {
@@ -89,7 +93,8 @@ static int sax_cb(mxml_node_t *node, mxml_sax_event_t event, void *sax_data) {
 
 int gpx_read(char *filename, Activity *activity) {
   FILE *f = NULL;
-  State state = {false, true, true, {{0}}};
+  State state = { NULL, false /* metadata */, true /* first_element */, UNSET_FIELD /* first_time */, {{0}}};
+  state.activity = activity;
   unset_data_point(&(state.dp));
 
   if (!(f = fopen(filename, "r"))) {
@@ -97,11 +102,12 @@ int gpx_read(char *filename, Activity *activity) {
   }
 
   if (!mxmlSAXLoadFile(NULL, f, MXML_OPAQUE_CALLBACK, sax_cb, (void *)&state)) {
-    fprintf(stderr, "failed\n"); /* TODO */
-    fclose(f);
-    return 1;
+    /*fprintf(stderr, "failed\n"); [> TODO <]*/
+    /*fclose(f);*/
+    /*return 1;*/
   }
 
+  activity->format = GPX;
   fprintf(stderr, "Made it\n"); /* TODO */
 
   fclose(f);
@@ -138,15 +144,4 @@ int gpx_write(char *filename, Activity *a) {
   mxmlDelete(tree);
   fclose(f);
   return 0;
-}
-
-/* TODO */
-int main(int argc, char *argv[]) {
-  Activity *a = activity_new();
-  int err = gpx_read(argv[1], a);
-  if (!err && argc > 2) {
-    err = gpx_write(argv[2], a);
-  }
-  activity_destroy(a);
-  return err;
 }

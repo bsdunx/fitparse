@@ -6,19 +6,10 @@
 typedef int (*ReadFn)(char *, Activity *);
 typedef int (*WriteFn)(char *, Activity *);
 
-typedef enum {
-  CSV,
-  GPX,
-  TCX,
-  FIT,
-  UnknownFileFormat
-} FileFormat;
-
-int fitparse_read(Activity *activity, char *filename);
-int fitparse_write(Activity *activity, char *filename);
+int fitparse_read(char *filename, Activity *activity);
+int fitparse_write(char *filename, Activity *activity);
 /* helper functions - could just call the *_read or *_write function directly */
-int fitparse_read_format(Activity *activity, char *filename, FileFormat format);
-int fitparse_write_format(Activity *activity, char *filename,
-                          FileFormat format);
+int fitparse_read_format(char *filename, FileFormat format, Activity *activity);
+int fitparse_write_format(char *filename, FileFormat format, Activity *activity);
 
 #endif /* _FITPARSE_H_ */

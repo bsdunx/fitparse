@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include <time.h>
+#include <ctype.h>
 
 #include "activity.h"
 #include "util.h"

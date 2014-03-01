@@ -13,6 +13,14 @@ typedef enum {
 } bool;
 
 typedef enum {
+  CSV,
+  GPX,
+  TCX,
+  FIT,
+  UnknownFileFormat
+} FileFormat;
+
+typedef enum {
   Timestamp,
   Latitude,
   Longitude,
@@ -104,6 +112,7 @@ typedef enum {
  */
 typedef struct {
   Sport sport;
+  FileFormat format; /* the original format it was read in from */
   uint32_t *laps; /* TODO array of timestamps, always at least one */
   DataPoint *data_points;
   size_t num_points;
@@ -119,5 +128,6 @@ Activity *activity_new(void);
 void activity_destroy(Activity *a);
 int activity_add_point(Activity *a, DataPoint *dp);
 int activity_add_lap(Activity *a, uint32_t lap);
+bool activity_equal(Activity *a, Activity *b);
 
 #endif /* _ACTIVITY_H_ */

@@ -1,4 +1,5 @@
 #include <string.h>
+#include <ctype.h>
 
 #include "fitparse.h"
 #include "activity.h"
@@ -22,16 +23,16 @@
  */
 
 /* indexed by FileFormat */
-static ReadFn *readers[] = {csv_read, fit_read, gpx_read, tcx_read};
+static const ReadFn readers[] = {csv_read, gpx_read, tcx_read, fit_read };
 
 /* indexed by FileFormat */
-static WriteFn *writers[] = {csv_write, fit_write, gpx_write, tcx_write};
+static const WriteFn writers[] = {csv_write, gpx_write, tcx_write, fit_write };
 
 static FileFormat file_format_from_name(char *filename) {
   char ext[4];
-  unsigned i;
+  int i;
   size_t len = strlen(filename);
-  for (i = 2; i >= 0; i++) {
+  for (i = 2; i >= 0; i--) {
     ext[i] = tolower(*(filename + len - 3 + i));
   }
   ext[3] = '\0';
@@ -44,36 +45,36 @@ static FileFormat file_format_from_name(char *filename) {
   return UnknownFileFormat;
 }
 
-int fitparse_read(Activity *activity, char *filename) {
+int fitparse_read(char *filename, Activity *activity) {
   size_t i;
   FileFormat format = file_format_from_name(filename);
   if (format != UnknownFileFormat &&
-      !fitparse_read_format(activity, filename, format)) {
+      !fitparse_read_format(filename, format, activity)) {
     return 0;
   }
 
   for (i = 0; i < sizeof(ARRAY_SIZE(readers)); i++) {
-    if (!readers[i](activiity, filename)) {
+    if (!readers[i](filename, activity)) {
       return 0;
     }
   }
 
   return 1;
 }
-int fitparse_write(Activity *activity, char *filename) {
+
+int fitparse_write(char *filename, Activity *activity) {
   FileFormat format = file_format_from_name(filename);
   if (format != UnknownFileFormat) {
     format = DEFAULT_WRITE_FORMAT;
   }
-  return fitparse_write_format(activity, filename, format);
+  return fitparse_write_format(filename, format, activity);
 }
 
-int fitparse_read_format(Activity *activity, char *filename,
-                         FileFormat format) {
+
+int fitparse_read_format(char *filename, FileFormat format, Activity *activity) {
   return readers[format](filename, activity);
 }
 
-int fitparse_write_format(Activity *activity, char *filename,
-                          FileFormat format) {
+int fitparse_write_format(char *filename, FileFormat format, Activity *activity) {
   return writers[format](filename, activity);
 }

@@ -29,6 +29,7 @@ Activity *activity_new(void) {
     return NULL;
   }
   a->sport = UnknownSport;
+  a->format = UnknownFileFormat;
   a->laps = NULL; /* TODO */
   a->data_points = NULL;
   a->num_points = 0;
@@ -57,6 +58,7 @@ void activity_destroy(Activity *a) {
 }
 
 /* TODO make sure we infer missing values and do corrections */
+/* TODO see gpx parser for additional checks we must perform */
 int activity_add_point(Activity *a, DataPoint *dp) {
   unsigned i;
 
@@ -68,6 +70,9 @@ int activity_add_point(Activity *a, DataPoint *dp) {
   /* TODO fill in inferred missing values a la gpx/tcx */
   for (i = 0; i < DataFieldCount; i++) {
     a->data_points[a->num_points].data[i] = dp->data[i];
+    if (dp->data[i] != UNSET_FIELD && !a->has_data[i]) {
+      a->has_data[i] = true;
+    }
   }
   a->num_points++;
 
@@ -83,4 +88,8 @@ int activity_add_lap(Activity *a, uint32_t lap) {
   }
   /* add activity->laps[next] = lap; */
   return 0;
+}
+
+bool activity_equal(Activity *a, Activity *b) {
+  return false; /* TODO */
 }

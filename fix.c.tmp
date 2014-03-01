@@ -4,6 +4,9 @@
 #include "activity.h"
 #include "fix.h"
 
+/* TODO rewirte for new Array logic */
+
+
 /* used to handle gaps in recording by inserting interpolated/zero samples to
  * ensure dataPoints are contiguous in time */
 int fix_invalid_gps(Activity *a);
