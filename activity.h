@@ -28,8 +28,13 @@ typedef enum {
   DataFieldCount
 } DataField;
 
-typedef struct { double data[DataFieldCount]; } DataPoint;
-static const char *DATA_FIELDS[DataFieldCount] = { "timestamp", "latitude", "longitude", "altitude", "distance", "speed", "power", "grade", "heart_rate", "cadence", "lr_balance", "temperature" };
+typedef struct {
+  double data[DataFieldCount];
+} DataPoint;
+static const char *DATA_FIELDS[DataFieldCount] = {
+    "timestamp",  "latitude", "longitude",  "altitude",
+    "distance",   "speed",    "power",      "grade",
+    "heart_rate", "cadence",  "lr_balance", "temperature"};
 
 /* TODO convert to array...
 //typedef struct Summary {
@@ -70,10 +75,12 @@ static inline void unset_data_point(DataPoint *dp) {
 static inline void print_data_point(DataPoint *dp) {
   double *d = dp->data;
   fprintf(stderr,
-          "time: %.0f, lat: %.15f, lon: %.15f, alt: %.2f, dist: %.2f, speed: %.2f, pow: %.0f, "
+          "time: %.0f, lat: %.15f, lon: %.15f, alt: %.2f, dist: %.2f, speed: "
+          "%.2f, pow: %.0f, "
           "grd: %.2f, hr: %.0f, cad: %.0f, bal: %.0f, temp: %.0f\n",
-          d[Timestamp], d[Latitude], d[Longitude], d[Altitude], d[Distance], d[Speed], d[Power],
-          d[Grade], d[HeartRate], d[Cadence], d[LRBalance], d[Temperature]);
+          d[Timestamp], d[Latitude], d[Longitude], d[Altitude], d[Distance],
+          d[Speed], d[Power], d[Grade], d[HeartRate], d[Cadence], d[LRBalance],
+          d[Temperature]);
 }
 
 typedef enum {
@@ -83,7 +90,6 @@ typedef enum {
   UnknownSport
 } Sport;
 
-
 typedef enum {
   InvalidGPS,
   Dropouts,
@@ -92,7 +98,6 @@ typedef enum {
   HeartRateDropouts,
   DataErrorCount
 } DataError;
-
 
 /*****************
  * TODO Read all individual points and compare it to summary data

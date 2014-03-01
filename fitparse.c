@@ -22,10 +22,10 @@
  */
 
 /* indexed by FileFormat */
-static ReadFn *readers[] = { csv_read, fit_read, gpx_read, tcx_read };
+static ReadFn *readers[] = {csv_read, fit_read, gpx_read, tcx_read};
 
 /* indexed by FileFormat */
-static WriteFn *writers[] = { csv_write, fit_write, gpx_write, tcx_write };
+static WriteFn *writers[] = {csv_write, fit_write, gpx_write, tcx_write};
 
 static FileFormat file_format_from_name(char *filename) {
   char ext[4];

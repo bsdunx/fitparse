@@ -3,7 +3,8 @@
 
 #include "activity.h"
 
-#define DEFAULT_CSV_OPTIONS { false, "NA" }
+#define DEFAULT_CSV_OPTIONS \
+  { false, "NA" }
 #define CSV_BUFSIZ 4096
 
 typedef struct {

@@ -20,7 +20,7 @@ int allspace(const char *str) {
   return !*str;
 }
 
-static inline void parse_field(DataField field, State* state, const char *str) {
+static inline void parse_field(DataField field, State *state, const char *str) {
   char *end;
   state->dp.data[field] = strtod(str, &end);
   if (*end) state->dp.data[field] = UNSET_FIELD;
@@ -38,7 +38,7 @@ static int sax_cb(mxml_node_t *node, mxml_sax_event_t event, void *sax_data) {
 
     if (state->first_element && strcmp(name, "gpx")) {
       fprintf(stderr, "error\n"); /* TODO */
-      return 1; /* stop reading the file */
+      return 1;                   /* stop reading the file */
     }
 
     if (!strcmp(name, "metadata")) {
@@ -70,7 +70,8 @@ static int sax_cb(mxml_node_t *node, mxml_sax_event_t event, void *sax_data) {
       parse_field(HeartRate, state, data);
     } else if (!strcmp(name, "gpxdata:temp") || !strcmp(name, "gpxtpx:atemp")) {
       parse_field(Temperature, state, data);
-    } else if (!strcmp(name, "gpxdata:cadence") || !strcmp(name, "gpxtpx:cad")) {
+    } else if (!strcmp(name, "gpxdata:cadence") ||
+               !strcmp(name, "gpxtpx:cad")) {
       parse_field(Cadence, state, data);
     } else if (!strcmp(name, "gpxdata:bikepower")) {
       parse_field(Power, state, data);
@@ -88,7 +89,7 @@ static int sax_cb(mxml_node_t *node, mxml_sax_event_t event, void *sax_data) {
 
 int gpx_read(char *filename, Activity *activity) {
   FILE *f = NULL;
-  State state = { false, true, true, {{0}} };
+  State state = {false, true, true, {{0}}};
   unset_data_point(&(state.dp));
 
   if (!(f = fopen(filename, "r"))) {

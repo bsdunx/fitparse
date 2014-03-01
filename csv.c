@@ -10,7 +10,7 @@ static DataField name_to_field(char *name) {
              !strcmp(name, "long")) {
     return Longitude;
   } else if (!strcmp(name, "altitude") || !strcmp(name, "elevation") ||
-             !strcmp(name, "alt") || !strcmp(name, "ele") ) {
+             !strcmp(name, "alt") || !strcmp(name, "ele")) {
     return Altitude;
   } else if (!strcmp(name, "distance") || !strcmp(name, "dist")) {
     return Distance;
@@ -32,7 +32,7 @@ static DataField name_to_field(char *name) {
   } else if (!strcmp(name, "temperature") || !strcmp(name, "atemp") ||
              !strcmp(name, "temp")) {
     return Cadence;
-  } else { /* not found */
+  } else {/* not found */
     return DataFieldCount;
   }
 }
@@ -41,7 +41,8 @@ static DataField name_to_field(char *name) {
  * all are doubles in base SI unit which we then convert into our format */
 int csv_read(char *filename, Activity *a) {
   FILE *f = NULL;
-  DataField data_fields[DataFieldCount]; // TODO worry all set to zero which is Timestamp
+  DataField data_fields[DataFieldCount];  // TODO worry all set to zero which is
+                                          // Timestamp
   DataPoint point;
   char buf[CSV_BUFSIZ];
 
@@ -70,7 +71,8 @@ int csv_read(char *filename, Activity *a) {
   return 0;
 }
 
-static int write_csv(FILE *f, const char *format, size_t i, DataField f, Activity *a, CSVOptions o, bool *first) {
+static int write_csv(FILE *f, const char *format, size_t i, DataField f,
+                     Activity *a, CSVOptions o, bool *first) {
   double d = a->data_points[i].data[field];
   if (!o.remove_unset || a->has_data[field]) {
     if (d == UNSET_FIELD) {
@@ -84,7 +86,6 @@ static int write_csv(FILE *f, const char *format, size_t i, DataField f, Activit
     *first = false;
   }
 }
-
 
 int csv_write(char *filename, Activity *a, CSVOptions o) {
   FILE *f = NULL;
