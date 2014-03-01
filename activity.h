@@ -5,6 +5,8 @@
 #include <stdio.h> /* TODO for fprintf in print data point */
 #include <float.h>
 
+#define ARRAY_SIZE(x) (sizeof(x) / sizeof(x[0]))
+
 typedef enum {
   false,
   true
@@ -41,6 +43,8 @@ typedef struct DataPoint {
   int8_t temperature; /* C */
   struct DataPoint *next;
 } DataPoint;
+
+static const char *DATA_FIELDS[DataFieldCount] = { "timestamp", "latitude", "longitude", "altitude", "distance", "speed", "power", "grade", "heart_rate", "cadence", "lr_balance", "temperature" };
 
 typedef struct Summary {
   unsigned lap; /* lap number 0 vs 1? */
