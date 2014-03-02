@@ -1,0 +1,17 @@
+csv read - make sure to exit if invalid
+mxml gpx bug
+gpx write
+activity clean/verify points
+activity laps
+activity summary
+modify fix.c for doubles
+proper testing
+fix Makefile
+licenses / copyright
+
+
+additional fixes (gaps, hr, power)
+tcx + fit data
+merge + split
+command line client
+tss/bike power etc
