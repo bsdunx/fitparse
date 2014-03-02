@@ -53,7 +53,7 @@ int fitparse_read(char *filename, Activity *activity) {
     return 0;
   }
 
-  for (i = 0; i < sizeof(ARRAY_SIZE(readers)); i++) {
+  for (i = 0; i < ARRAY_SIZE(readers); i++) {
     if (!readers[i](filename, activity)) {
       return 0;
     }

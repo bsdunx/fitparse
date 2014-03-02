@@ -1,4 +1,5 @@
 #include <string.h>
+#include <assert.h>
 #include <stdio.h>
 
 #include "csv.h"
@@ -93,7 +94,7 @@ int csv_read(char *filename, Activity *a) {
   */
 
   fclose(f);
-  return 0;
+  return 1;
 }
 
 static void write_field(FILE *f, const char *format, size_t i, DataField field,
@@ -116,6 +117,8 @@ int csv_write_options(char *filename, Activity *a, CSVOptions o) {
   FILE *f = NULL;
   unsigned i;
   bool first = true;
+
+  assert(a != NULL);
 
   if (!(f = fopen(filename, "w"))) {
     return 1;

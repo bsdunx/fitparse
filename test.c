@@ -23,12 +23,9 @@ bool test(const char *filename, const char *dir) {
   Activity *a, *b;
   size_t len = strlen(dir);
 
-  a = activity_new();
-
   /* read in the file in its original format */
   if (fitparse_read((char *)filename, a)) {
     print("failed to read in '%s'\n", filename);
-    activity_destroy(a);
     return false;
   }
   print("successfully read '%s' in as format %d\n", filename, a->format);
@@ -49,12 +46,10 @@ bool test(const char *filename, const char *dir) {
 #if 0
   fitparse_write(namebuf, a);
 
-  b = activity_new();
   /* read in the file in its original format */
   if (fitparse_read(namebuf, b)) {
     print("failed to read in '%s'\n", namebuf);
     activity_destroy(a);
-    activity_destroy(b);
     return false;
   }
 

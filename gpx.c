@@ -14,13 +14,6 @@ typedef struct {
   DataPoint dp;
 } State;
 
-int allspace(const char *str) {
-  while (isspace(*str)) {
-    str++;
-  }
-  return !*str;
-}
-
 static inline void parse_field(DataField field, State *state, const char *str) {
   char *end;
   state->dp.data[field] = strtod(str, &end);
@@ -94,21 +87,28 @@ static int sax_cb(mxml_node_t *node, mxml_sax_event_t event, void *sax_data) {
 int gpx_read(char *filename, Activity *activity) {
   FILE *f = NULL;
   State state = { NULL, false /* metadata */, true /* first_element */, UNSET_FIELD /* first_time */, {{0}}};
-  state.activity = activity;
   unset_data_point(&(state.dp));
 
   if (!(f = fopen(filename, "r"))) {
     return 1;
   }
 
-  if (!mxmlSAXLoadFile(NULL, f, MXML_OPAQUE_CALLBACK, sax_cb, (void *)&state)) {
-    /*fprintf(stderr, "failed\n"); [> TODO <]*/
-    /*fclose(f);*/
-    /*return 1;*/
+  if (!(state.activity = activity_new())) {
+    return 1;
   }
 
-  activity->format = GPX;
+  if (!mxmlSAXLoadFile(NULL, f, MXML_OPAQUE_CALLBACK, sax_cb, (void *)&state)) {
+
+    fprintf(stderr, "failed\n"); /* TODO */
+
+    activity_destroy(state.activity);
+    fclose(f);
+    return 1;
+  }
   fprintf(stderr, "Made it\n"); /* TODO */
+
+  state.activity->format = GPX;
+  activity = state.activity;
 
   fclose(f);
   return 0;
