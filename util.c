@@ -15,9 +15,9 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <string.h>
 #include <stdint.h>
 #include <time.h>
-#include <ctype.h>
 
 #include "activity.h"
 #include "util.h"
@@ -36,4 +36,11 @@ int format_timestamp(char *buf, uint32_t timestamp) {
   time_t time = (time_t)timestamp;
   struct tm *tm = gmtime(&time);
   return !strftime(buf, 21, "%Y-%m-%dT%H:%M:%SZ", tm) ? -1 : 0;
+}
+
+char *change_extension(char *filename, char *ext) {
+  char *cur = extension(filename);
+  if (strlen(cur) != strlen(ext)) return NULL;
+  strcpy(cur, ext);
+  return filename;
 }

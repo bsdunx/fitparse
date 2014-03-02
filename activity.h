@@ -77,10 +77,6 @@ typedef enum {
 typedef struct {
   double data[DataFieldCount];
 } DataPoint;
-static const char *DATA_FIELDS[DataFieldCount] = {
-    "timestamp",  "latitude", "longitude",  "altitude",
-    "distance",   "speed",    "power",      "grade",
-    "heart_rate", "cadence",  "lr_balance", "temperature"};
 
 /* TODO convert to array...
 //typedef struct Summary {
@@ -151,7 +147,7 @@ typedef enum {
 typedef struct {
   Sport sport;
   FileFormat format; /* the original format it was read in from */
-  uint32_t *laps; /* TODO array of timestamps, always at least one */
+  uint32_t *laps;    /* TODO array of timestamps, always at least one */
   DataPoint *data_points;
   size_t num_points;
   size_t points_alloc;

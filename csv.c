@@ -20,11 +20,17 @@
 #include <stdio.h>
 
 #include "csv.h"
+#include "util.h"
+
+static const char *DATA_FIELDS[DataFieldCount] = {
+    "timestamp",  "latitude", "longitude",  "altitude",
+    "distance",   "speed",    "power",      "grade",
+    "heart_rate", "cadence",  "lr_balance", "temperature"};
 
 /* test empty option and remove = true... */
 
 static DataField name_to_field(char *name) {
-  /* TODO convert name to lower case.... */
+  downcase(name);
   if (!strcmp(name, "timestamp") || !strcmp(name, "time")) {
     return Timestamp;
   } else if (!strcmp(name, "latitude") || !strcmp(name, "lat")) {
@@ -84,7 +90,8 @@ Activity *csv_read(char *filename) {
     return NULL;
   }
 
-  for (last = buf, comma = strchr(buf, ','); count < DataFieldCount && comma; comma = strchr(last, ',')) {
+  for (last = buf, comma = strchr(buf, ','); count < DataFieldCount && comma;
+       comma = strchr(last, ',')) {
     strncpy(field_str, last, comma - last);
     field_str[comma - last] = '\0';
 
@@ -115,10 +122,10 @@ Activity *csv_read(char *filename) {
 }
 
 static void write_field(FILE *f, const char *format, size_t i, DataField field,
-                     Activity *a, CSVOptions o, bool *first) {
+                        Activity *a, CSVOptions o, bool *first) {
   double d = a->data_points[i].data[field];
   if (!o.remove_unset || a->has_data[field]) {
-   if (!*first) {
+    if (!*first) {
       fprintf(f, ",");
     }
     if (d == UNSET_FIELD) {
@@ -154,7 +161,7 @@ int csv_write_options(char *filename, Activity *a, CSVOptions o) {
   }
   fprintf(f, "\n");
 
-	/* print data points - must be at least one non empty */
+  /* print data points - must be at least one non empty */
   for (i = 0, first = true; i < a->num_points; i++, first = true) {
     write_field(f, "%.0f", i, Timestamp, a, o, &first);
     write_field(f, "%.15f", i, Latitude, a, o, &first);

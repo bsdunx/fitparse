@@ -19,8 +19,21 @@
 #define _UTIL_H_
 
 #include <stdint.h>
+#include <ctype.h>
+#include <string.h>
+
+static inline char *extension(char *filename) {
+  char *s = strrchr(filename, '.');
+  return s ? s + 1 : s;
+}
+
+static inline char *downcase(char *str) {
+  for (; *str; ++str) *str = tolower(*str);
+  return str;
+}
 
 uint32_t parse_timestamp(const char *date);
 int format_timestamp(char *buf, uint32_t timestamp);
+char *change_extension(char *filename, char *ext);
 
 #endif /* _UTIL_H_ */

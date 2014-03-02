@@ -20,9 +20,12 @@
 #include <string.h>
 
 #include "fitparse.h"
+#include "util.h"
 
 #define PREFIX "out."
+/*#ifndef DEFAULT_DIR*/
 #define DEFAULT_DIR "tests/out"
+/*#endif*/
 
 static void print(const char *format, ...) {
 #ifdef DEBUG
@@ -49,15 +52,15 @@ bool test(const char *filename, const char *dir) {
 
   /* create a new filename by prefixing the old filename and the test dir */
   strcpy(namebuf, dir);
-  if (dir[len-1] != '/') {
+  if (dir[len - 1] != '/') {
     namebuf[len] = '/';
     len++;
   }
 
-  strncpy(namebuf+len, PREFIX, sizeof(PREFIX)-1);
-  strcpy(namebuf+len+(sizeof(PREFIX)-1), strrchr(filename, '/')+1);
+  strncpy(namebuf + len, PREFIX, sizeof(PREFIX) - 1);
+  strcpy(namebuf + len + (sizeof(PREFIX) - 1), strrchr(filename, '/') + 1);
 
-  print("writing to file %s\n", namebuf);
+  change_extension(namebuf, "csv"), print("writing to file %s\n", namebuf);
   fitparse_write_format(namebuf, CSV, a);
   activity_destroy(a);
   return 0;

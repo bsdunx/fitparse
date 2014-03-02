@@ -20,6 +20,7 @@
 
 #include "fitparse.h"
 #include "activity.h"
+#include "util.h"
 #include "csv.h"
 #include "fit.h"
 #include "gpx.h"
@@ -40,19 +41,15 @@
  */
 
 /* indexed by FileFormat */
-static const ReadFn readers[] = {csv_read, gpx_read, tcx_read, fit_read };
+static const ReadFn readers[] = {csv_read, gpx_read, tcx_read, fit_read};
 
 /* indexed by FileFormat */
-static const WriteFn writers[] = {csv_write, gpx_write, tcx_write, fit_write };
+static const WriteFn writers[] = {csv_write, gpx_write, tcx_write, fit_write};
 
 static FileFormat file_format_from_name(char *filename) {
   char ext[4];
-  int i;
-  size_t len = strlen(filename);
-  for (i = 2; i >= 0; i--) {
-    ext[i] = tolower(*(filename + len - 3 + i));
-  }
-  ext[3] = '\0';
+  strcpy(ext, extension(filename));
+  downcase(ext);
 
   if (!strcmp("csv", ext)) return CSV;
   if (!strcmp("gpx", ext)) return GPX;
@@ -92,6 +89,7 @@ Activity *fitparse_read_format(char *filename, FileFormat format) {
   return readers[format](filename);
 }
 
-int fitparse_write_format(char *filename, FileFormat format, Activity *activity) {
+int fitparse_write_format(char *filename, FileFormat format,
+                          Activity *activity) {
   return writers[format](filename, activity);
 }

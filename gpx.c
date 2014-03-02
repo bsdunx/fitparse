@@ -101,7 +101,8 @@ static int sax_cb(mxml_node_t *node, mxml_sax_event_t event, void *sax_data) {
       return 0;
     } else if (!strcmp(name, "time")) {
       state->dp.data[Timestamp] = parse_timestamp(data);
-      if (state->first_time == UNSET_FIELD && state->dp.data[Timestamp] != UNSET_FIELD) {
+      if (state->first_time == UNSET_FIELD &&
+          state->dp.data[Timestamp] != UNSET_FIELD) {
         state->first_time = state->dp.data[Timestamp];
       }
     } else if (!strcmp(name, "ele")) {
@@ -130,7 +131,11 @@ static int sax_cb(mxml_node_t *node, mxml_sax_event_t event, void *sax_data) {
 Activity *gpx_read(char *filename) {
   FILE *f = NULL;
   mxml_node_t *tree;
-  State state = { NULL, false /* metadata */, true /* first_element */, UNSET_FIELD /* first_time */, {{0}}};
+  State state = {NULL,
+                 false /* metadata */,
+                 true /* first_element */,
+                 UNSET_FIELD /* first_time */,
+                 {{0}}};
   unset_data_point(&(state.dp));
 
   if (!(f = fopen(filename, "r"))) {
@@ -141,7 +146,8 @@ Activity *gpx_read(char *filename) {
     return NULL;
   }
 
-  if (!(tree = mxmlSAXLoadFile(NULL, f, MXML_OPAQUE_CALLBACK, sax_cb, (void *)&state))) {
+  if (!(tree = mxmlSAXLoadFile(NULL, f, MXML_OPAQUE_CALLBACK, sax_cb,
+                               (void *)&state))) {
     activity_destroy(state.activity);
     fclose(f);
     return NULL;

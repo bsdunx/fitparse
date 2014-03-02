@@ -128,6 +128,4 @@ int activity_add_lap(Activity *a, uint32_t lap) {
   return 0;
 }
 
-bool activity_equal(Activity *a, Activity *b) {
-  return false; /* TODO */
-}
+bool activity_equal(Activity *a, Activity *b) { return false; /* TODO */ }

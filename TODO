@@ -1,5 +1,3 @@
-extension util = rename to csv when printing from gpx etc.
-  - store space for filename in activity = need to be malloced...
 csv read - make sure to exit if invalid
 gpx write
 activity clean/verify points
