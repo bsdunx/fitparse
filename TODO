@@ -8,8 +8,6 @@ activity summary
 modify fix.c for doubles
 proper testing
 fix Makefile
-licenses / copyright
-
 
 additional fixes (gaps, hr, power)
 tcx + fit data
