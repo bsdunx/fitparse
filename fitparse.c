@@ -79,7 +79,7 @@ Activity *fitparse_read(char *filename) {
 
 int fitparse_write(char *filename, Activity *activity) {
   FileFormat format = file_format_from_name(filename);
-  if (format != UnknownFileFormat) {
+  if (format == UnknownFileFormat) {
     format = DEFAULT_WRITE_FORMAT;
   }
   return fitparse_write_format(filename, format, activity);

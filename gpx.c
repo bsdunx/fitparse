@@ -73,8 +73,7 @@ static int sax_cb(mxml_node_t *node, mxml_sax_event_t event, void *sax_data) {
         return 1; /* stop reading the file */
       }
 
-      /* TODO confirm no memory leak */
-      /* We must retain an element so that mxmlSAXLoadFile can return it */
+      /* we must retain an element so that mxmlSAXLoadFile can return it */
       mxmlRetain(node);
     }
 
@@ -118,7 +117,6 @@ static int sax_cb(mxml_node_t *node, mxml_sax_event_t event, void *sax_data) {
       parse_field(Power, state, data);
     } else if (!strcmp(name, "trkpt")) {
       activity_add_point(state->activity, &(state->dp));
-      /*print_data_point(&(state->dp)); [> TODO <]*/
       unset_data_point(&(state->dp));
     }
   } else if (event == MXML_SAX_DATA) {
@@ -161,13 +159,83 @@ Activity *gpx_read(char *filename) {
 }
 
 static mxml_node_t *to_gpx_xml(Activity *a) {
+  char buf[TIME_BUFSIZ];
   unsigned i;
-  mxml_node_t *xml; /*, *gpx, *trk, *trkseg, *trkpt, *ele, *time, *hr, *temp,
-*cadence, *bikepower; */
+  mxml_node_t *xml, *gpx, *metadata, *trk, *time, *name, *trkseg, *trkpt, *ele,
+      *extensions, *gpxtpx, *atemp, *hr, *cad;
 
   xml = mxmlNewXML("1.0");
+
+  /* create gpx root */
+  gpx = mxmlNewElement(xml, "gpx");
+  mxmlElementSetAttr(gpx, "creator", "fitparse");
+  mxmlElementSetAttr(gpx, "version", "1.1");
+  mxmlElementSetAttr(gpx, "xmlns", "http://www.topografix.com/GPX/1/1");
+  mxmlElementSetAttr(gpx, "xmlns:xsi",
+                     "http://www.w3.org/2001/XMLSchema-instance");
+  mxmlElementSetAttr(gpx, "xmlns:gpxtpx",
+                     "http://www.garmin.com/xmlschemas/TrackPointExtension/v1");
+  mxmlElementSetAttr(gpx, "xmlns:gpxx",
+                     "http://www.garmin.com/xmlschemas/GpxExtensions/v3");
+  mxmlElementSetAttr(gpx, "xsi:schemaLocation",
+                     "http://www.topografix.com/GPX/1/1 "
+                     "http://www.topografix.com/GPX/1/1/gpx.xsd "
+                     "http://www.garmin.com/xmlschemas/GpxExtensions/v3 "
+                     "http://www.garmin.com/xmlschemas/GpxExtensionsv3.xsd "
+                     "http://www.garmin.com/xmlschemas/TrackPointExtension/v1 "
+                     "http://www.garmin.com/xmlschemas/"
+                     "TrackPointExtensionv1.xsd");
+
+  /* write metadata element */
+  metadata = mxmlNewElement(gpx, "metadata");
+  time = mxmlNewElement(metadata, "time");
+  format_timestamp(buf, 1393740341); /* TODO */
+  mxmlNewText(time, 0, buf);
+  memset(buf, '\0', TIME_BUFSIZ);
+
+  /* TODO lap waypoints?  or lap as metadata? */
+
+  trk = mxmlNewElement(gpx, "trk");
+  name = mxmlNewElement(trk, "name");
+  mxmlNewText(name, 0, "Untitled");
+
+  trkseg = mxmlNewElement(trk, "trkseg");
   for (i = 0; i < a->num_points; i++) {
-    /* TODO */
+    trkpt = mxmlNewElement(trkseg, "trkpt");
+    mxmlElementSetAttrf(trkpt, "lat", "%.7f", a->data_points[i].data[Latitude]);
+    mxmlElementSetAttrf(trkpt, "lon", "%.7f",
+                        a->data_points[i].data[Longitude]);
+
+    if (a->data_points[i].data[Altitude] != UNSET_FIELD) {
+      ele = mxmlNewElement(trkpt, "ele");
+      mxmlNewTextf(ele, 0, "%.2f", a->data_points[i].data[Altitude]);
+    }
+    if (a->data_points[i].data[Timestamp] != UNSET_FIELD) {
+      time = mxmlNewElement(trkpt, "time");
+      format_timestamp(buf, a->data_points[i].data[Timestamp]);
+      mxmlNewText(time, 0, buf);
+      memset(buf, '\0', TIME_BUFSIZ);
+    }
+
+    if ((a->data_points[i].data[HeartRate] != UNSET_FIELD) ||
+        (a->data_points[i].data[Cadence] != UNSET_FIELD) ||
+        (a->data_points[i].data[Temperature] != UNSET_FIELD)) {
+      extensions = mxmlNewElement(trkpt, "extensions");
+      gpxtpx = mxmlNewElement(extensions, "gpxtpx:TrackPointExtension");
+
+      if (a->data_points[i].data[HeartRate] != UNSET_FIELD) {
+        hr = mxmlNewElement(gpxtpx, "gpxtpx:hr");
+        mxmlNewInteger(hr, a->data_points[i].data[HeartRate]);
+      }
+      if (a->data_points[i].data[Cadence] != UNSET_FIELD) {
+        cad = mxmlNewElement(gpxtpx, "gpxtpx:cad");
+        mxmlNewInteger(cad, a->data_points[i].data[Cadence]);
+      }
+      if (a->data_points[i].data[Temperature] != UNSET_FIELD) {
+        atemp = mxmlNewElement(gpxtpx, "gpxtpx:atemp");
+        mxmlNewInteger(atemp, a->data_points[i].data[Temperature]);
+      }
+    }
   }
   return xml;
 }
@@ -175,6 +243,10 @@ static mxml_node_t *to_gpx_xml(Activity *a) {
 int gpx_write(char *filename, Activity *a) {
   FILE *f;
   mxml_node_t *tree;
+
+  if (!(a->has_data[Latitude] && a->has_data[Longitude])) {
+    return 1;
+  }
 
   f = fopen(filename, "w");
   if (!(f = fopen(filename, "w")) || !(tree = to_gpx_xml(a))) {

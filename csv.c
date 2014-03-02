@@ -164,8 +164,8 @@ int csv_write_options(char *filename, Activity *a, CSVOptions o) {
   /* print data points - must be at least one non empty */
   for (i = 0, first = true; i < a->num_points; i++, first = true) {
     write_field(f, "%.0f", i, Timestamp, a, o, &first);
-    write_field(f, "%.15f", i, Latitude, a, o, &first);
-    write_field(f, "%.15f", i, Longitude, a, o, &first);
+    write_field(f, "%.7f", i, Latitude, a, o, &first);
+    write_field(f, "%.7f", i, Longitude, a, o, &first);
     write_field(f, "%.3f", i, Altitude, a, o, &first);
     write_field(f, "%.2f", i, Distance, a, o, &first);
     write_field(f, "%.2f", i, Speed, a, o, &first);

@@ -22,6 +22,8 @@
 #include <ctype.h>
 #include <string.h>
 
+#define TIME_BUFSIZ 32
+
 static inline char *extension(char *filename) {
   char *s = strrchr(filename, '.');
   return s ? s + 1 : s;

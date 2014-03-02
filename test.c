@@ -60,8 +60,10 @@ bool test(const char *filename, const char *dir) {
   strncpy(namebuf + len, PREFIX, sizeof(PREFIX) - 1);
   strcpy(namebuf + len + (sizeof(PREFIX) - 1), strrchr(filename, '/') + 1);
 
-  change_extension(namebuf, "csv"), print("writing to file %s\n", namebuf);
-  fitparse_write_format(namebuf, CSV, a);
+  /*change_extension(namebuf, "csv");*/
+  print("writing to file %s\n", namebuf);
+  /*fitparse_write_format(namebuf, GPX, a);*/
+  fitparse_write(namebuf, a);
   activity_destroy(a);
   return 0;
 #if 0

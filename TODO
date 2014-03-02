@@ -1,11 +1,11 @@
 csv read - make sure to exit if invalid
-gpx write
+modify fix.c for doubles
+*   gpx write - mostly done, modulo laps and metadata time
+proper testing
+fix Makefile
 activity clean/verify points
 activity laps
 activity summary
-modify fix.c for doubles
-proper testing
-fix Makefile
 
 additional fixes (gaps, hr, power)
 tcx + fit data
