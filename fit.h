@@ -3,7 +3,7 @@
 
 #include "activity.h"
 
-int fit_read(char *filename, Activity *activity);
+Activity *fit_read(char *filename);
 int fit_write(char *filename, Activity *activity);
 
 #endif /* _FIT_H_ */

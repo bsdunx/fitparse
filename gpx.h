@@ -3,7 +3,7 @@
 
 #include "activity.h"
 
-int gpx_read(char *filename, Activity *activity);
+Activity *gpx_read(char *filename);
 int gpx_write(char *filename, Activity *activity);
 
 #endif /* _GPX_H_ */

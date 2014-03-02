@@ -14,7 +14,7 @@ typedef struct {
   /* Something Lap related? */
 } CSVOptions;
 
-int csv_read(char *filename, Activity *activity);
+Activity *csv_read(char *filename);
 int csv_write_options(char *filename, Activity *activity, CSVOptions options);
 
 static inline int csv_write(char *filename, Activity *activity) {

@@ -45,7 +45,7 @@ static DataField name_to_field(char *name) {
 
 /* Fields can have several names and be in different orders, but we assume
  * all are doubles in base SI unit which we then convert into our format */
-int csv_read(char *filename, Activity *a) {
+Activity *csv_read(char *filename) {
   FILE *f = NULL;
   char buf[CSV_BUFSIZ], *comma, *last, field_str[CSV_FIELD_SIZE];
   DataField data_fields[DataFieldCount], field;
@@ -59,12 +59,12 @@ int csv_read(char *filename, Activity *a) {
   unset_data_point(&point);
 
   if (!(f = fopen(filename, "r"))) {
-    return 1;
+    return NULL;
   }
 
   /* make sure we can read the header */
   if (!fgets(buf, sizeof(buf), f)) {
-    return 1;
+    return NULL;
   }
 
   for (last = buf, comma = strchr(buf, ','); count < DataFieldCount && comma; comma = strchr(last, ',')) {
@@ -94,7 +94,7 @@ int csv_read(char *filename, Activity *a) {
   */
 
   fclose(f);
-  return 1;
+  return NULL;
 }
 
 static void write_field(FILE *f, const char *format, size_t i, DataField field,

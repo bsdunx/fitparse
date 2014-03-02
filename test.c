@@ -24,7 +24,7 @@ bool test(const char *filename, const char *dir) {
   size_t len = strlen(dir);
 
   /* read in the file in its original format */
-  if (fitparse_read((char *)filename, a)) {
+  if (!(a = fitparse_read((char *)filename))) {
     print("failed to read in '%s'\n", filename);
     return false;
   }
@@ -42,12 +42,13 @@ bool test(const char *filename, const char *dir) {
 
   print("writing to file %s\n", namebuf);
   fitparse_write_format(namebuf, CSV, a);
+  activity_destroy(a);
   return 0;
 #if 0
   fitparse_write(namebuf, a);
 
   /* read in the file in its original format */
-  if (fitparse_read(namebuf, b)) {
+  if (!(b = fitparse_read(namebuf))) {
     print("failed to read in '%s'\n", namebuf);
     activity_destroy(a);
     return false;

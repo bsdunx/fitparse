@@ -3,13 +3,13 @@
 
 #include "activity.h"
 
-typedef int (*ReadFn)(char *, Activity *);
+typedef Activity *(*ReadFn)(char *);
 typedef int (*WriteFn)(char *, Activity *);
 
-int fitparse_read(char *filename, Activity *activity);
+Activity *fitparse_read(char *filename);
 int fitparse_write(char *filename, Activity *activity);
 /* helper functions - could just call the *_read or *_write function directly */
-int fitparse_read_format(char *filename, FileFormat format, Activity *activity);
+Activity *fitparse_read_format(char *filename, FileFormat format);
 int fitparse_write_format(char *filename, FileFormat format, Activity *activity);
 
 #endif /* _FITPARSE_H_ */

@@ -45,21 +45,22 @@ static FileFormat file_format_from_name(char *filename) {
   return UnknownFileFormat;
 }
 
-int fitparse_read(char *filename, Activity *activity) {
+Activity *fitparse_read(char *filename) {
+  Activity *a;
   size_t i;
   FileFormat format = file_format_from_name(filename);
-  if (format != UnknownFileFormat &&
-      !fitparse_read_format(filename, format, activity)) {
-    return 0;
+
+  if (format != UnknownFileFormat) {
+    return (a = fitparse_read_format(filename, format)) ? a : NULL;
   }
 
   for (i = 0; i < ARRAY_SIZE(readers); i++) {
-    if (!readers[i](filename, activity)) {
-      return 0;
+    if ((a = readers[i](filename))) {
+      return a;
     }
   }
 
-  return 1;
+  return NULL;
 }
 
 int fitparse_write(char *filename, Activity *activity) {
@@ -70,9 +71,8 @@ int fitparse_write(char *filename, Activity *activity) {
   return fitparse_write_format(filename, format, activity);
 }
 
-
-int fitparse_read_format(char *filename, FileFormat format, Activity *activity) {
-  return readers[format](filename, activity);
+Activity *fitparse_read_format(char *filename, FileFormat format) {
+  return readers[format](filename);
 }
 
 int fitparse_write_format(char *filename, FileFormat format, Activity *activity) {

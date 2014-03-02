@@ -3,7 +3,7 @@
 
 #include "activity.h"
 
-int tcx_read(char *filename, Activity *activity);
+Activity *tcx_read(char *filename);
 int tcx_write(char *filename, Activity *activity);
 
 #endif /* _TCX_H_ */

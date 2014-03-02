@@ -30,9 +30,14 @@ static int sax_cb(mxml_node_t *node, mxml_sax_event_t event, void *sax_data) {
 
     name = mxmlGetElement(node);
 
-    if (state->first_element && strcmp(name, "gpx")) {
-      fprintf(stderr, "error\n"); /* TODO */
-      return 1;                   /* stop reading the file */
+    if (state->first_element) {
+      if (strcmp(name, "gpx")) {
+        return 1; /* stop reading the file */
+      }
+
+      /* TODO confirm no memory leak */
+      /* We must retain an element so that mxmlSAXLoadFile can return it */
+      mxmlRetain(node);
     }
 
     if (!strcmp(name, "metadata")) {
@@ -84,34 +89,31 @@ static int sax_cb(mxml_node_t *node, mxml_sax_event_t event, void *sax_data) {
   return 0;
 }
 
-int gpx_read(char *filename, Activity *activity) {
+Activity *gpx_read(char *filename) {
   FILE *f = NULL;
+  mxml_node_t *tree;
   State state = { NULL, false /* metadata */, true /* first_element */, UNSET_FIELD /* first_time */, {{0}}};
   unset_data_point(&(state.dp));
 
   if (!(f = fopen(filename, "r"))) {
-    return 1;
+    return NULL;
   }
 
   if (!(state.activity = activity_new())) {
-    return 1;
+    return NULL;
   }
 
-  if (!mxmlSAXLoadFile(NULL, f, MXML_OPAQUE_CALLBACK, sax_cb, (void *)&state)) {
-
-    fprintf(stderr, "failed\n"); /* TODO */
-
+  if (!(tree = mxmlSAXLoadFile(NULL, f, MXML_OPAQUE_CALLBACK, sax_cb, (void *)&state))) {
     activity_destroy(state.activity);
     fclose(f);
-    return 1;
+    return NULL;
   }
-  fprintf(stderr, "Made it\n"); /* TODO */
 
   state.activity->format = GPX;
-  activity = state.activity;
 
+  mxmlDelete(tree);
   fclose(f);
-  return 0;
+  return state.activity;
 }
 
 static mxml_node_t *to_gpx_xml(Activity *a) {
