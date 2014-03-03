@@ -29,7 +29,7 @@ static const char *DATA_FIELDS[DataFieldCount] = {
 
 static DataField name_to_field(char *name) {
   /* deal with optional leading whitespace */
-  while(isspace(*name)) name++ ;
+  while (isspace(*name)) name++;
   /* make the name lowercase for comparisons */
   downcase(name);
 
@@ -63,7 +63,7 @@ static DataField name_to_field(char *name) {
   } else if (!strcmp(name, "temperature") || !strcmp(name, "atemp") ||
              !strcmp(name, "temp")) {
     return Temperature;
-  } else {/* not found */
+  } else { /* not found */
     return DataFieldCount;
   }
 }
@@ -137,8 +137,7 @@ Activity *csv_read(char *filename) {
   while (!fgets(buf, sizeof(buf), f)) {
 
     for (i = 0, j = 0, last = buf, comma = strchr(buf, ',');
-        j < i && i < CSV_MAX_FIELDS && comma;
-        comma = strchr(last, ','), i++) {
+         j < i && i < CSV_MAX_FIELDS && comma; comma = strchr(last, ','), i++) {
 
       strncpy(field_str, last, comma - last);
       field_str[comma - last] = '\0';
@@ -160,7 +159,6 @@ Activity *csv_read(char *filename) {
       }
       data_fields[i] = field;
     }
-
 
     activity_add_point(a, &dp);
 

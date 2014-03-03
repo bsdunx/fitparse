@@ -45,18 +45,9 @@
 
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof(x[0]))
 
-typedef enum {
-  false,
-  true
-} bool;
+typedef enum { false, true } bool;
 
-typedef enum {
-  CSV,
-  GPX,
-  TCX,
-  FIT,
-  UnknownFileFormat
-} FileFormat;
+typedef enum { CSV, GPX, TCX, FIT, UnknownFileFormat } FileFormat;
 
 typedef enum {
   Timestamp,

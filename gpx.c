@@ -107,8 +107,8 @@ static int sax_cb(mxml_node_t *node, mxml_sax_event_t event, void *sax_data) {
     } else if (!strcmp(name, "gpxdata:cadence") ||
                !strcmp(name, "gpxtpx:cad")) {
       parse_field(Cadence, &(state->dp), data);
-      } else if (!strcmp(name, "gpxdata:bikepower")) {
-        parse_field(Power, &(state->dp), data);
+    } else if (!strcmp(name, "gpxdata:bikepower")) {
+      parse_field(Power, &(state->dp), data);
     } else if (!strcmp(name, "trkpt")) {
       activity_add_point(state->activity, &(state->dp));
       unset_data_point(&(state->dp));
