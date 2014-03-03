@@ -24,6 +24,7 @@
   { false, "NA" }
 #define CSV_BUFSIZ 4096
 #define CSV_FIELD_SIZE 32
+#define CSV_MAX_FIELDS 1024
 
 typedef struct {
   bool remove_unset;

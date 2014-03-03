@@ -18,6 +18,7 @@
 #include <string.h>
 #include <stdint.h>
 #include <time.h>
+#include <ctype.h>
 
 #include "activity.h"
 #include "util.h"
@@ -35,7 +36,7 @@ uint32_t parse_timestamp(const char *date) {
 int format_timestamp(char *buf, uint32_t timestamp) {
   time_t time = (time_t)timestamp;
   struct tm *tm = gmtime(&time);
-  return !strftime(buf, 21, "%Y-%m-%dT%H:%M:%SZ", tm) ? -1 : 0;
+  return !strftime(buf, TIME_BUFSIZ, "%Y-%m-%dT%H:%M:%SZ", tm) ? -1 : 0;
 }
 
 char *change_extension(char *filename, char *ext) {
@@ -43,4 +44,21 @@ char *change_extension(char *filename, char *ext) {
   if (strlen(cur) != strlen(ext)) return NULL;
   strcpy(cur, ext);
   return filename;
+}
+
+double parse_field(DataField field, DataPoint *dp, const char *str) {
+  char *end;
+
+  if (!str) {
+    dp->data[field] = strtod(str, &end);
+    return UNSET_FIELD;
+  }
+
+  if (field == Timestamp) {
+    dp->data[field] = parse_timestamp(str);
+  } else {
+    dp->data[field] = strtod(str, &end);
+    if (*end && !isspace(*end)) dp->data[field] = UNSET_FIELD;
+  }
+  return dp->data[field];
 }

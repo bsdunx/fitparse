@@ -1,3 +1,4 @@
+garmin smart record/hwm
 csv read - make sure to exit if invalid
 modify fix.c for doubles
 *   gpx write - mostly done, modulo laps and metadata time
@@ -12,3 +13,4 @@ tcx + fit data
 merge + split
 command line client
 tss/bike power etc
+strtod is locale dependent?

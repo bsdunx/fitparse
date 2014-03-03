@@ -23,9 +23,7 @@
 #include "util.h"
 
 #define PREFIX "out."
-/*#ifndef DEFAULT_DIR*/
 #define DEFAULT_DIR "tests/out"
-/*#endif*/
 
 static void print(const char *format, ...) {
 #ifdef DEBUG
@@ -60,7 +58,7 @@ bool test(const char *filename, const char *dir) {
   strncpy(namebuf + len, PREFIX, sizeof(PREFIX) - 1);
   strcpy(namebuf + len + (sizeof(PREFIX) - 1), strrchr(filename, '/') + 1);
 
-  /*change_extension(namebuf, "csv");*/
+  change_extension(namebuf, "csv");
   print("writing to file %s\n", namebuf);
   /*fitparse_write_format(namebuf, GPX, a);*/
   fitparse_write(namebuf, a);

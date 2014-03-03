@@ -52,12 +52,6 @@ typedef struct {
   DataPoint dp;
 } State;
 
-static inline void parse_field(DataField field, State *state, const char *str) {
-  char *end;
-  state->dp.data[field] = strtod(str, &end);
-  if (*end) state->dp.data[field] = UNSET_FIELD;
-}
-
 static int sax_cb(mxml_node_t *node, mxml_sax_event_t event, void *sax_data) {
   const char *name, *attr, *data;
   State *state = (State *)sax_data;
@@ -82,11 +76,11 @@ static int sax_cb(mxml_node_t *node, mxml_sax_event_t event, void *sax_data) {
     } else if (!strcmp(name, "trkpt")) {
       attr = mxmlElementGetAttr(node, "lat");
       if (attr) {
-        parse_field(Latitude, state, attr);
+        parse_field(Latitude, &(state->dp), attr);
       }
       attr = mxmlElementGetAttr(node, "lon");
       if (attr) {
-        parse_field(Longitude, state, attr);
+        parse_field(Longitude, &(state->dp), attr);
       }
     }
     state->first_element = false;
@@ -99,22 +93,22 @@ static int sax_cb(mxml_node_t *node, mxml_sax_event_t event, void *sax_data) {
     } else if (state->metadata) {
       return 0;
     } else if (!strcmp(name, "time")) {
-      state->dp.data[Timestamp] = parse_timestamp(data);
+      parse_field(Timestamp, &(state->dp), data);
       if (state->first_time == UNSET_FIELD &&
           state->dp.data[Timestamp] != UNSET_FIELD) {
         state->first_time = state->dp.data[Timestamp];
       }
     } else if (!strcmp(name, "ele")) {
-      parse_field(Altitude, state, data);
+      parse_field(Altitude, &(state->dp), data);
     } else if (!strcmp(name, "gpxdata:hr") || !strcmp(name, "gpxtpx:hr")) {
-      parse_field(HeartRate, state, data);
+      parse_field(HeartRate, &(state->dp), data);
     } else if (!strcmp(name, "gpxdata:temp") || !strcmp(name, "gpxtpx:atemp")) {
-      parse_field(Temperature, state, data);
+      parse_field(Temperature, &(state->dp), data);
     } else if (!strcmp(name, "gpxdata:cadence") ||
                !strcmp(name, "gpxtpx:cad")) {
-      parse_field(Cadence, state, data);
-    } else if (!strcmp(name, "gpxdata:bikepower")) {
-      parse_field(Power, state, data);
+      parse_field(Cadence, &(state->dp), data);
+      } else if (!strcmp(name, "gpxdata:bikepower")) {
+        parse_field(Power, &(state->dp), data);
     } else if (!strcmp(name, "trkpt")) {
       activity_add_point(state->activity, &(state->dp));
       unset_data_point(&(state->dp));
@@ -159,7 +153,7 @@ Activity *gpx_read(char *filename) {
 }
 
 static mxml_node_t *to_gpx_xml(Activity *a) {
-  char buf[TIME_BUFSIZ];
+  char buf[TIME_BUFSIZ]; /* we don't need to zero since all the same length */
   unsigned i;
   mxml_node_t *xml, *gpx, *metadata, *trk, *time, *name, *trkseg, *trkpt, *ele,
       *extensions, *gpxtpx, *atemp, *hr, *cad;
@@ -191,7 +185,6 @@ static mxml_node_t *to_gpx_xml(Activity *a) {
   time = mxmlNewElement(metadata, "time");
   format_timestamp(buf, 1393740341); /* TODO */
   mxmlNewText(time, 0, buf);
-  memset(buf, '\0', TIME_BUFSIZ);
 
   /* TODO lap waypoints?  or lap as metadata? */
 
@@ -214,7 +207,6 @@ static mxml_node_t *to_gpx_xml(Activity *a) {
       time = mxmlNewElement(trkpt, "time");
       format_timestamp(buf, a->data_points[i].data[Timestamp]);
       mxmlNewText(time, 0, buf);
-      memset(buf, '\0', TIME_BUFSIZ);
     }
 
     if ((a->data_points[i].data[HeartRate] != UNSET_FIELD) ||
