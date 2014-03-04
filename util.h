@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 Kirk Scheibelhut <kjs@scheibo.com>
+ *  Copyright (c) 2014 Kirk Scheibelhut <kjs@scheibo.com>
  *
  *  This file is free software: you may copy, redistribute and/or modify it
  *  under the terms of the GNU General Public License as published by the
@@ -18,12 +18,18 @@
 #ifndef _UTIL_H_
 #define _UTIL_H_
 
-#include <stdint.h>
 #include <ctype.h>
+#include <float.h>
+#include <stdint.h>
 #include <string.h>
 #include <stdlib.h>
 
 #define TIME_BUFSIZ 21
+
+static int doubles_equal(double a, double b) {
+  double error_b = b * DBL_EPSILON;
+  return (a >= b - error_b) && (a <= b + error_b);
+}
 
 static inline char *extension(char *filename) {
   char *s = strrchr(filename, '.');

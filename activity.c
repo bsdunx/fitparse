@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 Kirk Scheibelhut <kjs@scheibo.com>
+ *  Copyright (c) 2014 Kirk Scheibelhut <kjs@scheibo.com>
  *
  *  This file is free software: you may copy, redistribute and/or modify it
  *  under the terms of the GNU General Public License as published by the
@@ -62,18 +62,24 @@
   } while (0)
 
 Activity *activity_new(void) {
+  unsigned i;
   Activity *a;
+
   if (!(a = malloc(sizeof(*a)))) {
     return NULL;
   }
+
   a->sport = UnknownSport;
   a->format = UnknownFileFormat;
   a->start_time = 0;
   a->laps = NULL; /* TODO */
   a->data_points = NULL;
   a->num_points = 0;
-  memset(a->has_data, false, sizeof(a->has_data));
+
   memset(a->errors, 0, sizeof(a->errors));
+  for (i = 0; i < DataFieldCount; i++) {
+    a->last_data.data = UNSET_FIELD;
+  }
 
   return a;
 }
@@ -96,21 +102,59 @@ void activity_destroy(Activity *a) {
   a = NULL;
 }
 
+/* Attempt to derive speed from distance or vice-versa */
+static void derive_speed_distance(DataPoint *last, DataPoint *dp) {
+  double delta_t, delta_d;
+
+  if (dp->data[Speed] != UNSET_FIELD && dp->data[Distance] != UNSET_FIELD) return;
+
+  /* compute the elapsed time and distance traveled since the last recorded trackpoint */
+  delta_t = dp->data[Timestamp] - last->data[Time];
+
+  /* derive speed from distance */
+  if (dp->data[Speed] == UNSET_FIELD && dp->data[Distance] != UNSET_FIELD) {
+
+    delta_d = dp->data[Distance] - last->data[Distance];
+    if (delta_t > 0) dp->data[Speed] = delta_d / delta_t * SECS_IN_HOUR;
+  } else if (dp->data[Distance] != UNSET_FIELD) { /* otherwise derive distance from speed */
+    delta_d = delta_t * speed / SECS_IN_HOUR;
+    dp->distance[Distance] = last->data[Distance] + delta_d;
+  }
+}
+
+/* TODO */
+
+#define PI 3.14159265
+inline double toRadians(double degrees)
+{
+    return degrees * 2 * PI / 360;
+
+}
+
 /* TODO make sure we infer missing values and do corrections */
 /* TODO see gpx parser for additional checks we must perform */
 int activity_add_point(Activity *a, DataPoint *dp) {
   unsigned i;
+
+  if (!a->start_time && dp->data[Timestamp] != UNSET_FIELD) {
+    a->start_time = dp->data[Timestamp];
+  }
 
   ALLOC_GROW(a->data_points, a->num_points + 1, a->points_alloc);
   if (!(a->data_points)) {
     return 1;
   }
 
+  /* if this isn't the first time */
+  if (a->num_points > 0) {
+    derive_speed_distance(&(a->last), DataPoint *dp);
+  }
+
   /* TODO fill in inferred missing values a la gpx/tcx */
   for (i = 0; i < DataFieldCount; i++) {
     a->data_points[a->num_points].data[i] = dp->data[i];
-    if (dp->data[i] != UNSET_FIELD && !a->has_data[i]) {
-      a->has_data[i] = true;
+    if (dp->data[i] != UNSET_FIELD) {
+      a->last.data[i] = dp->data[i];
     }
   }
   a->num_points++;
@@ -130,6 +174,7 @@ int activity_add_lap(Activity *a, uint32_t lap) {
 }
 
 /* TODO */
+/* TODO double equals ? */
 bool activity_equal(Activity *a, Activity *b) {
   unsigned i, j;
 
@@ -141,7 +186,7 @@ bool activity_equal(Activity *a, Activity *b) {
       (a->start_time != b->start_time)) return false;
 
   for (i = 0; i < DataFieldCount; i++) {
-    if (a->has_data[i] != b->has_data[i]) return false;
+    if (a->last.data[i] != b->last.data[i]) return false;
   }
 
   for (i = 0; i < a->num_points; i++) {

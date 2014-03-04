@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 Kirk Scheibelhut <kjs@scheibo.com>
+ *  Copyright (c) 2014 Kirk Scheibelhut <kjs@scheibo.com>
  *
  *  This file is free software: you may copy, redistribute and/or modify it
  *  under the terms of the GNU General Public License as published by the
@@ -44,6 +44,8 @@
 #include <float.h>
 
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof(x[0]))
+
+#define SECS_IN_HOUR 3600
 
 typedef enum { false, true } bool;
 
@@ -141,9 +143,9 @@ typedef struct {
   uint32_t start_time;
   uint32_t *laps;    /* TODO array of timestamps, always at least one */
   DataPoint *data_points;
+  DataPoint last;
   size_t num_points;
   size_t points_alloc;
-  bool has_data[DataFieldCount];
   unsigned errors[DataErrorCount];
   /*
   //Summary *summaries; // laps + total can include derived statistics

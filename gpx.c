@@ -49,7 +49,6 @@ typedef struct {
   Activity *activity;
   bool metadata;
   bool first_element;
-  double first_time;
   DataPoint dp;
 } State;
 
@@ -95,10 +94,6 @@ static int sax_cb(mxml_node_t *node, mxml_sax_event_t event, void *sax_data) {
       return 0;
     } else if (!strcmp(name, "time")) {
       parse_field(Timestamp, &(state->dp), data);
-      if (state->first_time == UNSET_FIELD &&
-          state->dp.data[Timestamp] != UNSET_FIELD) {
-        state->first_time = state->dp.data[Timestamp];
-      }
     } else if (!strcmp(name, "ele")) {
       parse_field(Altitude, &(state->dp), data);
     } else if (!strcmp(name, "gpxdata:hr") || !strcmp(name, "gpxtpx:hr")) {
@@ -127,7 +122,6 @@ Activity *gpx_read(char *filename) {
   State state = {NULL,
                  false /* metadata */,
                  true /* first_element */,
-                 UNSET_FIELD /* first_time */,
                  {{0}}};
   unset_data_point(&(state.dp));
 
@@ -142,7 +136,6 @@ Activity *gpx_read(char *filename) {
   }
 
   state.activity->format = GPX;
-  state.activity->start_time = state.first_time;
 
   mxmlDelete(tree);
   fclose(f);
@@ -235,7 +228,8 @@ int gpx_write(char *filename, Activity *a) {
 
   assert(a != NULL);
 
-  if (!(a->has_data[Latitude] && a->has_data[Longitude])) return 1;
+  if (a->last.data[Latitude] == UNSET_FIELD &&
+      a->last.data[Longitude] == UNSET_FIELD) return 1;
 
   f = fopen(filename, "w");
   if (!(f = fopen(filename, "w")) || !(tree = to_gpx_xml(a))) return 1;

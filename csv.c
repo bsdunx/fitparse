@@ -142,11 +142,6 @@ static void read_csv_data(FILE *f, DataField data_fields[], int count,
       memset(field_str, '\0', CSV_FIELD_SIZE);
     }
 
-
-    if (!a->start_time && dp.data[Timestamp] != UNSET_FIELD) {
-      a->start_time = dp.data[Timestamp];
-    }
-
     activity_add_point(a, &dp);
     unset_data_point(&dp);
     memset(buf, '\0', CSV_BUFSIZ);
@@ -175,7 +170,7 @@ Activity *csv_read(char *filename) {
 static void write_field(FILE *f, const char *format, size_t i, DataField field,
                         Activity *a, CSVOptions o, bool *first) {
   double d = a->data_points[i].data[field];
-  if (!o.remove_unset || a->has_data[field]) {
+  if (!o.remove_unset || a->last.data[field] != UNSET_FIELD) {
     if (!*first) {
       fprintf(f, ",");
     }
@@ -201,7 +196,7 @@ int csv_write_options(char *filename, Activity *a, CSVOptions o) {
 
   /* print header */
   for (i = 0; i < DataFieldCount; i++) {
-    if (!o.remove_unset || a->has_data[i]) {
+    if (!o.remove_unset || a->last.data[i] != UNSET_FIELD) {
       if (first) {
         fprintf(f, "%s", DATA_FIELDS[i]);
         first = false;
