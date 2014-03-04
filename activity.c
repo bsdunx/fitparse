@@ -36,6 +36,7 @@
  *     51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#include <math.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -100,6 +101,28 @@ void activity_destroy(Activity *a) {
   a = NULL;
 }
 
+/* Derive distance from change in position */
+static void derive_distance_position(DataPoint *last, DataPoint *dp) {
+  double d_lat, d_lon, a, c, delta_d;
+
+  if (dp->data[Distance] == UNSET_FIELD &&
+      (dp->data[Latitude] != UNSET_FIELD &&
+       dp->data[Longitude] != UNSET_FIELD) &&
+      (last->data[Latitude] != UNSET_FIELD &&
+       last->data[Longitude] != UNSET_FIELD))
+    return;
+
+  /* Use the Haversine formula to calculate distance from lat and lon */
+  d_lat = to_radians(dp->data[Latitude] - last->data[Latitude]);
+  d_lon = to_radians(dp->data[Longitude] - last->data[Longitude]);
+  a = sin(d_lat / 2) * sin(d_lat / 2) + cos(to_radians(dp->data[Latitude])) *
+      cos(toRadians(last->data[Latitude])) * sin(d_lon / 2) * sin(d_lon / 2);
+  c = 4 * atan2(sqrt(a), 1 + sqrt(1 - fabs(a)));
+  delta_d = 6371 * c;
+
+  dp->data[Distance] = last->data[Distance] + delta_d;
+}
+
 /* Attempt to derive speed from distance or vice-versa */
 static void derive_speed_distance(DataPoint *last, DataPoint *dp) {
   double delta_t, delta_d;
@@ -141,7 +164,11 @@ int activity_add_point(Activity *a, DataPoint *dp) {
 
   /* if this isn't the first time */
   if (a->num_points > 0) {
+    /* TODO - should we still run these functions to verify everything is correct? */
+    /* TODO set errors and correct if they are wrong? */
+    derive_distance_position(&(a->data_points[a->num_points - 1]), DataPoint *dp);
     derive_speed_distance(&(a->data_points[a->num_points - 1]), DataPoint *dp);
+    /* HWM/garmin smart recording shit */
   }
 
   for (i = 0; i < DataFieldCount; i++) {
