@@ -138,6 +138,7 @@ typedef enum {
 typedef struct {
   Sport sport;
   FileFormat format; /* the original format it was read in from */
+  uint32_t start_time;
   uint32_t *laps;    /* TODO array of timestamps, always at least one */
   DataPoint *data_points;
   size_t num_points;

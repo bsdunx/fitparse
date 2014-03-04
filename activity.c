@@ -68,6 +68,7 @@ Activity *activity_new(void) {
   }
   a->sport = UnknownSport;
   a->format = UnknownFileFormat;
+  a->start_time = 0;
   a->laps = NULL; /* TODO */
   a->data_points = NULL;
   a->num_points = 0;
@@ -136,7 +137,8 @@ bool activity_equal(Activity *a, Activity *b) {
   if (a == b) return true;
 
   /* TODO a->sport ? */
-  if (a->num_points != b->num_points) return false;
+  if ((a->num_points != b->num_points) ||
+      (a->start_time != b->start_time)) return false;
 
   for (i = 0; i < DataFieldCount; i++) {
     if (a->has_data[i] != b->has_data[i]) return false;

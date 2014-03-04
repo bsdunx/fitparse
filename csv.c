@@ -15,9 +15,9 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <string.h>
 #include <assert.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "csv.h"
 #include "util.h"
@@ -140,6 +140,11 @@ static void read_csv_data(FILE *f, DataField data_fields[], int count,
       field_str[comma - last] = '\0';
       parse_field(data_fields[i], &dp, field_str);
       memset(field_str, '\0', CSV_FIELD_SIZE);
+    }
+
+
+    if (!a->start_time && dp.data[Timestamp] != UNSET_FIELD) {
+      a->start_time = dp.data[Timestamp];
     }
 
     activity_add_point(a, &dp);

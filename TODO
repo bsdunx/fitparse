@@ -1,6 +1,3 @@
-add start time as field for activity
-make sure time buffer can support reading in ms (even though it doesnt keep them)
-
 garmin smart record/hwm
 modify fix.c for doubles
 *   gpx write - mostly done, modulo laps and metadata time

@@ -36,9 +36,10 @@
  *     51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#include <assert.h>
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <ctype.h>
 
 #include "activity.h"
 #include "mxml.h"
@@ -141,6 +142,7 @@ Activity *gpx_read(char *filename) {
   }
 
   state.activity->format = GPX;
+  state.activity->start_time = state.first_time;
 
   mxmlDelete(tree);
   fclose(f);
@@ -178,7 +180,7 @@ static mxml_node_t *to_gpx_xml(Activity *a) {
   /* write metadata element */
   metadata = mxmlNewElement(gpx, "metadata");
   time = mxmlNewElement(metadata, "time");
-  format_timestamp(buf, 1393740341); /* TODO */
+  format_timestamp(buf, a->start_time);
   mxmlNewText(time, 0, buf);
 
   /* TODO lap waypoints?  or lap as metadata? */
@@ -230,6 +232,8 @@ static mxml_node_t *to_gpx_xml(Activity *a) {
 int gpx_write(char *filename, Activity *a) {
   FILE *f;
   mxml_node_t *tree;
+
+  assert(a != NULL);
 
   if (!(a->has_data[Latitude] && a->has_data[Longitude])) return 1;
 
