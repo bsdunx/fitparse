@@ -1,5 +1,4 @@
 garmin smart record/hwm
-csv read - make sure to exit if invalid
 modify fix.c for doubles
 *   gpx write - mostly done, modulo laps and metadata time
 proper testing

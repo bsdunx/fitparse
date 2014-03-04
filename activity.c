@@ -128,4 +128,25 @@ int activity_add_lap(Activity *a, uint32_t lap) {
   return 0;
 }
 
-bool activity_equal(Activity *a, Activity *b) { return false; /* TODO */ }
+/* TODO */
+bool activity_equal(Activity *a, Activity *b) {
+  unsigned i, j;
+
+  if (!a) return !b;
+  if (a == b) return true;
+
+  /* TODO a->sport ? */
+  if (a->num_points != b->num_points) return false;
+
+  for (i = 0; i < DataFieldCount; i++) {
+    if (a->has_data[i] != b->has_data[i]) return false;
+  }
+
+  for (i = 0; i < a->num_points; i++) {
+    for (j = 0; j < DataFieldCount; j++) {
+      if (a->data_points[i].data[j] != b->data_points[i].data[j]) return false;
+    }
+  }
+
+  return true;
+}

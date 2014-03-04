@@ -15,7 +15,7 @@ default: test
 all: test
 
 test: $(OBJECTS) $(LIBS) $(HEADERS)
-	$(CC) $(OBJECTS) $(LIBS) -Wall -o $@
+	$(CC) $(CFLAGS) $(OBJECTS) $(LIBS) -Wall -o $@
 	mkdir -p tests/out
 
 test.o: test.c $(HEADERS)

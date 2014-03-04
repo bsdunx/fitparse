@@ -49,10 +49,7 @@ char *change_extension(char *filename, char *ext) {
 double parse_field(DataField field, DataPoint *dp, const char *str) {
   char *end;
 
-  if (!str) {
-    dp->data[field] = strtod(str, &end);
-    return UNSET_FIELD;
-  }
+  if (!str) return (dp->data[field] = UNSET_FIELD);
 
   if (field == Timestamp) {
     dp->data[field] = parse_timestamp(str);

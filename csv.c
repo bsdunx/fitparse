@@ -68,26 +68,14 @@ static DataField name_to_field(char *name) {
   }
 }
 
-/* Fields can have several names and be in different orders, but we assume
- * all are doubles in base SI unit which we then convert into our format */
-Activity *csv_read(char *filename) {
-  FILE *f = NULL;
+static int read_csv_header(FILE *f, DataField data_fields[]) {
   char buf[CSV_BUFSIZ], *comma, *last, field_str[CSV_FIELD_SIZE];
-  DataField data_fields[CSV_MAX_FIELDS], field;
-  Activity *a;
-  DataPoint dp;
-  unsigned i, j, count = 0;
-
-  /* initialize */
-  unset_data_point(&dp);
-
-  if (!(f = fopen(filename, "r"))) {
-    return NULL;
-  }
+  DataField field;
+  unsigned i, count = 0;
 
   /* make sure we can read the header */
   if (!fgets(buf, sizeof(buf), f)) {
-    return NULL;
+    return 0;
   }
 
   /* read in the header */
@@ -116,6 +104,63 @@ Activity *csv_read(char *filename) {
   }
   memset(buf, '\0', CSV_BUFSIZ);
 
+  return count;
+}
+
+static void read_csv_data(FILE *f, DataField data_fields[], int count,
+                          Activity *a) {
+  char buf[CSV_BUFSIZ], *comma, *last, field_str[CSV_FIELD_SIZE];
+  unsigned i, j;
+  DataPoint dp;
+
+  /* initialize */
+  unset_data_point(&dp);
+
+  /* read in data points */
+  while (fgets(buf, sizeof(buf), f)) {
+    for (i = 0, j = 0, last = buf, comma = strchr(buf, ',');
+         j < count && i < CSV_MAX_FIELDS && comma;
+         comma = strchr(last, ','), i++) {
+
+      if (data_fields[i] != DataFieldCount) {
+        strncpy(field_str, last, comma - last);
+        field_str[comma - last] = '\0';
+        parse_field(data_fields[i], &dp, field_str);
+        memset(field_str, '\0', CSV_FIELD_SIZE);
+        j++;
+      }
+
+      last = comma + 1;
+    }
+    /* strip newline */
+    if ((comma = strrchr(last, '\n')) != NULL) *comma = '\0';
+    /* grab the last header field (no trailing comma) */
+    if (j < count && i < CSV_MAX_FIELDS && data_fields[i] != DataFieldCount) {
+      strncpy(field_str, last, comma - last);
+      field_str[comma - last] = '\0';
+      parse_field(data_fields[i], &dp, field_str);
+      memset(field_str, '\0', CSV_FIELD_SIZE);
+    }
+
+    activity_add_point(a, &dp);
+    unset_data_point(&dp);
+    memset(buf, '\0', CSV_BUFSIZ);
+  }
+}
+
+/* Fields can have several names and be in different orders, but we assume
+ * all are doubles in base SI unit which we then convert into our format */
+Activity *csv_read(char *filename) {
+  FILE *f = NULL;
+  DataField data_fields[CSV_MAX_FIELDS];
+  Activity *a;
+  unsigned count;
+
+  unsigned i, j; /* TODO */
+
+  if (!(f = fopen(filename, "r"))) return NULL;
+  if (!(count = read_csv_header(f, data_fields))) return NULL;
+
   /* TODO */
   fprintf(stderr, "count: %d\n", count);
   for (i = 0, j = 0; i < CSV_MAX_FIELDS && j < count; i++) {
@@ -126,51 +171,12 @@ Activity *csv_read(char *filename) {
   }
   /* TODO */
 
-  /* if we couldn't read any fields from the header, this is not a csv */
-  if (!count) {
-    return NULL;
-  }
-
   a = activity_new();
-
-  /* read in data points */
-  while (!fgets(buf, sizeof(buf), f)) {
-
-    for (i = 0, j = 0, last = buf, comma = strchr(buf, ',');
-         j < i && i < CSV_MAX_FIELDS && comma; comma = strchr(last, ','), i++) {
-
-      strncpy(field_str, last, comma - last);
-      field_str[comma - last] = '\0';
-
-      if ((field = name_to_field(field_str)) != DataFieldCount) {
-        j++;
-      }
-      data_fields[i] = field;
-
-      last = comma + 1;
-      memset(field_str, '\0', CSV_FIELD_SIZE);
-    }
-    /* strip newline */
-    if ((comma = strrchr(last, '\n')) != NULL) *comma = '\0';
-    /* grab the last header field (no trailing comma) */
-    if (count < DataFieldCount && i < CSV_MAX_FIELDS) {
-      if ((field = name_to_field(last)) != DataFieldCount) {
-        count++;
-      }
-      data_fields[i] = field;
-    }
-
-    activity_add_point(a, &dp);
-
-    unset_data_point(&dp);
-    memset(buf, '\0', CSV_BUFSIZ);
-  }
-
+  read_csv_data(f, data_fields, count, a);
   a->format = CSV;
-  activity_destroy(a); /* TODO */
 
   fclose(f);
-  return NULL;
+  return a;
 }
 
 static void write_field(FILE *f, const char *format, size_t i, DataField field,
