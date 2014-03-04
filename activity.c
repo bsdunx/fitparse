@@ -36,6 +36,7 @@
  *     51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#include <float.h>
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
@@ -62,6 +63,17 @@
     }                                         \
   } while (0)
 
+static void init_summary(Summary *s) {
+  unsigned i;
+  for (i = 0; i < DataFieldCount, i++) {
+    s->point[Minimum].data[i] = DBL_MAX;
+    s->point[Maximum].data[i] = DBL_MIN;
+    s->point[Total].data[i] = 0;
+    s->point[Average].data[i] = 0;
+    s->unset[i] = 0;
+  }
+}
+
 Activity *activity_new(void) {
   unsigned i;
   Activity *a;
@@ -79,6 +91,7 @@ Activity *activity_new(void) {
 
   memset(a->errors, 0, sizeof(*(a->errors)));
   memset(a->last, NULL, sizeof(*(a->last)));
+  init_summary(&(a->summary));
 
   return a;
 }
@@ -142,9 +155,28 @@ static void derive_speed_distance(DataPoint *last, DataPoint *dp) {
 
     delta_d = dp->data[Distance] - last->data[Distance];
     if (delta_t > 0) dp->data[Speed] = delta_d / delta_t * SECS_IN_HOUR;
-  } else if (dp->data[Distance] != UNSET_FIELD) { /* otherwise derive distance from speed */
+  } else if (dp->data[Distance] != UNSET_FIELD) {
+    /* otherwise derive distance from speed */
     delta_d = delta_t * dp->data[Speed] / SECS_IN_HOUR;
     dp->distance[Distance] = last->data[Distance] + delta_d;
+  }
+}
+
+static void recalc_summary(DataPoint *dp) {
+  unsigned i;
+
+  for (i = 0; i < DataFieldCount; i++) {
+    if (dp->data[i] == UNSET_FIELD) {
+      summary.unset[i] += 1;
+      continue;
+    }
+
+    if (dp->data[i] < a->summary.point[Minimum].data[i])
+      summary.point[Minimum].data[i] = dp->data[i];
+    if (dp->data[i] > a->summary.point[Maximum].data[i])
+      summary.point[Maximum].data[i] = dp->data[i];
+    summary.point[Total].data[i] += dp->data[i];
+    summary.point[Average].data[i] = summary.point[Total].data[i] / summary.unset[i];
   }
 }
 
@@ -177,6 +209,9 @@ int activity_add_point(Activity *a, DataPoint *dp) {
       a->last[i] = a->data_points[a->num_points];
     }
   }
+
+  /* TODO eventually move to a lap based system */
+  recalc_summary(a->data_points);
   a->num_points++;
 
   return 0;

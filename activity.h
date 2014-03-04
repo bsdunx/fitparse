@@ -134,6 +134,19 @@ typedef enum {
   DataErrorCount
 } DataError;
 
+typedef enum {
+  Minimum,
+  Maximum,
+  Total,
+  Average,
+  SummaryPointCount
+} SummaryPoint;
+
+typedef struct {
+  DataPoint point[SummaryPointCount];
+  unsigned unset[DataFieldCount];
+} Summary;
+
 /*****************
  * TODO Read all individual points and compare it to summary data
  */
@@ -144,6 +157,7 @@ typedef struct {
   uint32_t *laps;    /* TODO array of timestamps, always at least one */
   DataPoint *data_points;
   DataPoint *last[DataFieldCount];
+  Summary summary;
   size_t num_points;
   size_t points_alloc;
   unsigned errors[DataErrorCount];
