@@ -130,13 +130,8 @@ Activity *gpx_read(char *filename) {
                  {{0}}};
   unset_data_point(&(state.dp));
 
-  if (!(f = fopen(filename, "r"))) {
-    return NULL;
-  }
-
-  if (!(state.activity = activity_new())) {
-    return NULL;
-  }
+  if (!(f = fopen(filename, "r"))) return NULL;
+  if (!(state.activity = activity_new())) return NULL;
 
   if (!(tree = mxmlSAXLoadFile(NULL, f, MXML_OPAQUE_CALLBACK, sax_cb,
                                (void *)&state))) {
@@ -236,14 +231,10 @@ int gpx_write(char *filename, Activity *a) {
   FILE *f;
   mxml_node_t *tree;
 
-  if (!(a->has_data[Latitude] && a->has_data[Longitude])) {
-    return 1;
-  }
+  if (!(a->has_data[Latitude] && a->has_data[Longitude])) return 1;
 
   f = fopen(filename, "w");
-  if (!(f = fopen(filename, "w")) || !(tree = to_gpx_xml(a))) {
-    return 1;
-  }
+  if (!(f = fopen(filename, "w")) || !(tree = to_gpx_xml(a))) return 1;
 
   if (mxmlSaveFile(tree, f, MXML_NO_CALLBACK) < 0) {
     mxmlDelete(tree);
