@@ -20,13 +20,18 @@
 
 #include <ctype.h>
 #include <float.h>
+#include <math.h>
 #include <stdint.h>
 #include <string.h>
 #include <stdlib.h>
 
 #define TIME_BUFSIZ 21
 
-static int doubles_equal(double a, double b) {
+static inline double to_radians(double degrees) {
+  return degrees * 2 * PI / 360;
+}
+
+static inline int doubles_equal(double a, double b) {
   double error_b = b * DBL_EPSILON;
   return (a >= b - error_b) && (a <= b + error_b);
 }

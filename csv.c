@@ -170,7 +170,7 @@ Activity *csv_read(char *filename) {
 static void write_field(FILE *f, const char *format, size_t i, DataField field,
                         Activity *a, CSVOptions o, bool *first) {
   double d = a->data_points[i].data[field];
-  if (!o.remove_unset || a->last.data[field] != UNSET_FIELD) {
+  if (!o.remove_unset || a->last[field]) {
     if (!*first) {
       fprintf(f, ",");
     }
@@ -196,7 +196,7 @@ int csv_write_options(char *filename, Activity *a, CSVOptions o) {
 
   /* print header */
   for (i = 0; i < DataFieldCount; i++) {
-    if (!o.remove_unset || a->last.data[i] != UNSET_FIELD) {
+    if (!o.remove_unset || a->last[i]) {
       if (first) {
         fprintf(f, "%s", DATA_FIELDS[i]);
         first = false;

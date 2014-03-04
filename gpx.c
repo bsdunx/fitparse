@@ -228,8 +228,7 @@ int gpx_write(char *filename, Activity *a) {
 
   assert(a != NULL);
 
-  if (a->last.data[Latitude] == UNSET_FIELD &&
-      a->last.data[Longitude] == UNSET_FIELD) return 1;
+  if (!a->last[Latitude] && !a->last[Longitude]) return 1;
 
   f = fopen(filename, "w");
   if (!(f = fopen(filename, "w")) || !(tree = to_gpx_xml(a))) return 1;

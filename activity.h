@@ -143,7 +143,7 @@ typedef struct {
   uint32_t start_time;
   uint32_t *laps;    /* TODO array of timestamps, always at least one */
   DataPoint *data_points;
-  DataPoint last;
+  DataPoint *last[DataFieldCount];
   size_t num_points;
   size_t points_alloc;
   unsigned errors[DataErrorCount];

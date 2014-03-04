@@ -76,10 +76,8 @@ Activity *activity_new(void) {
   a->data_points = NULL;
   a->num_points = 0;
 
-  memset(a->errors, 0, sizeof(a->errors));
-  for (i = 0; i < DataFieldCount; i++) {
-    a->last_data.data = UNSET_FIELD;
-  }
+  memset(a->errors, 0, sizeof(*(a->errors)));
+  memset(a->last, NULL, sizeof(*(a->last)));
 
   return a;
 }
@@ -106,7 +104,12 @@ void activity_destroy(Activity *a) {
 static void derive_speed_distance(DataPoint *last, DataPoint *dp) {
   double delta_t, delta_d;
 
-  if (dp->data[Speed] != UNSET_FIELD && dp->data[Distance] != UNSET_FIELD) return;
+  /* return if distance and speed data is fine, or if last values are bad */
+  if ((dp->data[Speed] != UNSET_FIELD &&
+       dp->data[Distance] != UNSET_FIELD) ||
+      (last->data[Timestamp] == UNSET_FIELD &&
+       last->data[Distance] == UNSET_FIELD))
+    return;
 
   /* compute the elapsed time and distance traveled since the last recorded trackpoint */
   delta_t = dp->data[Timestamp] - last->data[Time];
@@ -117,18 +120,9 @@ static void derive_speed_distance(DataPoint *last, DataPoint *dp) {
     delta_d = dp->data[Distance] - last->data[Distance];
     if (delta_t > 0) dp->data[Speed] = delta_d / delta_t * SECS_IN_HOUR;
   } else if (dp->data[Distance] != UNSET_FIELD) { /* otherwise derive distance from speed */
-    delta_d = delta_t * speed / SECS_IN_HOUR;
+    delta_d = delta_t * dp->data[Speed] / SECS_IN_HOUR;
     dp->distance[Distance] = last->data[Distance] + delta_d;
   }
-}
-
-/* TODO */
-
-#define PI 3.14159265
-inline double toRadians(double degrees)
-{
-    return degrees * 2 * PI / 360;
-
 }
 
 /* TODO make sure we infer missing values and do corrections */
@@ -147,14 +141,13 @@ int activity_add_point(Activity *a, DataPoint *dp) {
 
   /* if this isn't the first time */
   if (a->num_points > 0) {
-    derive_speed_distance(&(a->last), DataPoint *dp);
+    derive_speed_distance(&(a->data_points[a->num_points - 1]), DataPoint *dp);
   }
 
-  /* TODO fill in inferred missing values a la gpx/tcx */
   for (i = 0; i < DataFieldCount; i++) {
     a->data_points[a->num_points].data[i] = dp->data[i];
     if (dp->data[i] != UNSET_FIELD) {
-      a->last.data[i] = dp->data[i];
+      a->last[i] = a->data_points[a->num_points];
     }
   }
   a->num_points++;
@@ -186,7 +179,7 @@ bool activity_equal(Activity *a, Activity *b) {
       (a->start_time != b->start_time)) return false;
 
   for (i = 0; i < DataFieldCount; i++) {
-    if (a->last.data[i] != b->last.data[i]) return false;
+    if (a->last[i] && !b->last[i] || !a->last[i] && b->last[i]) return false;
   }
 
   for (i = 0; i < a->num_points; i++) {
