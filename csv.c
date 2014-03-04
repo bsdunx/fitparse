@@ -156,20 +156,8 @@ Activity *csv_read(char *filename) {
   Activity *a;
   unsigned count;
 
-  unsigned i, j; /* TODO */
-
   if (!(f = fopen(filename, "r"))) return NULL;
   if (!(count = read_csv_header(f, data_fields))) return NULL;
-
-  /* TODO */
-  fprintf(stderr, "count: %d\n", count);
-  for (i = 0, j = 0; i < CSV_MAX_FIELDS && j < count; i++) {
-    fprintf(stderr, "%d: %d\n", i, data_fields[i]);
-    if (data_fields[i] != DataFieldCount) {
-      j++;
-    }
-  }
-  /* TODO */
 
   a = activity_new();
   read_csv_data(f, data_fields, count, a);
