@@ -34,6 +34,7 @@
  *     with this program; if not, write to the Free Software Foundation, Inc.,
  *     51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
+#include <assert.h>
 
 #include "activity.h"
 #include "fix.h"
@@ -51,7 +52,7 @@ int fix_invalid_gps(Activity *a) {
   assert(a != NULL);
 
   /* ignore files without GPS data */
-  if (!ride->last[Latitude] || !ride->last[Longitude]) return -1;
+  if (!a->last[Latitude] || !a->last[Longitude]) return -1;
 
   for (i = 0; i < a->num_points; i++) {
     dp = a->data_points[i];
@@ -69,7 +70,7 @@ int fix_invalid_gps(Activity *a) {
       delta_longitude =
           (dp.data[Longitude] - good.data[Latitude]) / (double)(i - last_good);
 
-      for (int j = last_good + 1; j < i; j++) {
+      for (j = last_good + 1; j < i; j++) {
         a->data_points[j].data[Latitude] =
             good.data[Latitude] + ((j - last_good) * delta_latitude);
         a->data_points[j].data[Longitude] =

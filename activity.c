@@ -42,6 +42,7 @@
 #include <string.h>
 
 #include "activity.h"
+#include "util.h"
 
 #define alloc_nr(x) (((x) + 16) * 3 / 2)
 
@@ -67,7 +68,7 @@ static void init_summary(Summary *s) {
   DataField i;
   s->elapsed = s->moving = s->calories = s->ascent = s->descent = 0;
 
-  for (i = 0; i < DataFieldCount, i++) {
+  for (i = 0; i < DataFieldCount; i++) {
     s->point[Minimum].data[i] = DBL_MAX;
     s->point[Maximum].data[i] = DBL_MIN;
     s->point[Total].data[i] = 0;
@@ -91,7 +92,7 @@ Activity *activity_new(void) {
   a->num_points = 0;
 
   memset(a->errors, 0, sizeof(*(a->errors)));
-  memset(a->last, NULL, sizeof(*(a->last)));
+  memset(a->last, 0, sizeof(*(a->last)));
   init_summary(&(a->summary));
 
   return a;
@@ -129,7 +130,7 @@ static void derive_distance_position(DataPoint *last, DataPoint *dp) {
   d_lon = to_radians(dp->data[Longitude] - last->data[Longitude]);
   a = sin(d_lat / 2) * sin(d_lat / 2) +
       cos(to_radians(dp->data[Latitude])) *
-          cos(toRadians(last->data[Latitude])) * sin(d_lon / 2) *
+          cos(to_radians(last->data[Latitude])) * sin(d_lon / 2) *
           sin(d_lon / 2);
   c = 4 * atan2(sqrt(a), 1 + sqrt(1 - fabs(a)));
   delta_d = 6371 * c;
@@ -148,7 +149,7 @@ static void derive_speed_distance(DataPoint *last, DataPoint *dp) {
 
   /* compute the elapsed time and distance traveled since the last recorded
    * trackpoint */
-  delta_t = dp->data[Timestamp] - last->data[Time];
+  delta_t = dp->data[Timestamp] - last->data[Timestamp];
 
   /* derive speed from distance */
   if (!SET(dp->data[Speed]) && !SET(dp->data[Distance])) {
@@ -158,47 +159,51 @@ static void derive_speed_distance(DataPoint *last, DataPoint *dp) {
   } else if (SET(dp->data[Distance])) {
     /* otherwise derive distance from speed */
     delta_d = delta_t * dp->data[Speed] / SECS_IN_HOUR;
-    dp->distance[Distance] = last->data[Distance] + delta_d;
+    dp->data[Distance] = last->data[Distance] + delta_d;
   }
 }
 
-static inline bool moved(DataPoint *dp) { return dp->speed > MOVING_SPEED; }
+static inline bool moved(DataPoint *dp) {
+  return dp->data[Speed] > MOVING_SPEED;
+}
 
-static void recalc_summary(DataPoint *dp, DataPoint *last[]) {
+static void recalc_summary(Activity *a, DataPoint *dp) {
   DataField i;
+  DataPoint **last = a->last;
   double d_alt;
 
   for (i = 0; i < DataFieldCount; i++) {
     if (!SET(dp->data[i])) {
-      summary.unset[i] += 1;
+      a->summary.unset[i] += 1;
       continue;
     }
 
     if (dp->data[i] < a->summary.point[Minimum].data[i])
-      summary.point[Minimum].data[i] = dp->data[i];
+      a->summary.point[Minimum].data[i] = dp->data[i];
     if (dp->data[i] > a->summary.point[Maximum].data[i])
-      summary.point[Maximum].data[i] = dp->data[i];
-    summary.point[Total].data[i] += dp->data[i];
-    summary.point[Average].data[i] =
-        summary.point[Total].data[i] / summary.unset[i];
+      a->summary.point[Maximum].data[i] = dp->data[i];
+
+    a->summary.point[Total].data[i] += dp->data[i];
+    a->summary.point[Average].data[i] =
+        a->summary.point[Total].data[i] / a->summary.unset[i];
   }
 
-  summary.elapsed = summary.point[Maximum].data[Timestamp] -
-                    summary.point[Minimum].data[Timestamp];
+  a->summary.elapsed = a->summary.point[Maximum].data[Timestamp] -
+                       a->summary.point[Minimum].data[Timestamp];
 
   /* TODO calories */
 
   if (last[Altitude] && SET(dp->data[Altitude])) {
     d_alt = dp->data[Altitude] - last[Altitude]->data[Altitude];
     if (d_alt > 0) {
-      summary.ascent += d_alt;
+      a->summary.ascent += d_alt;
     } else {
-      summary.descent += -d_alt;
+      a->summary.descent += -d_alt;
     }
   }
 
   if (last[Timestamp] && SET(dp->data[Timestamp]) && moved(dp)) {
-    summary.moving += dp->data[Timestamp] - last[Timestamp]->data[Timestamp];
+    a->summary.moving += dp->data[Timestamp] - last[Timestamp]->data[Timestamp];
   }
 }
 
@@ -229,12 +234,12 @@ int activity_add_point(Activity *a, DataPoint *dp) {
   }
 
   /* TODO eventually move to a lap based system */
-  recalc_summary(dp, a->last);
+  recalc_summary(a, dp);
 
   for (i = 0; i < DataFieldCount; i++) {
     a->data_points[a->num_points].data[i] = dp->data[i];
     if (SET(dp->data[i])) {
-      a->last[i] = a->data_points[a->num_points];
+      a->last[i] = &(a->data_points[a->num_points]);
     }
   }
 
@@ -267,7 +272,8 @@ bool activity_equal(Activity *a, Activity *b) {
     return false;
 
   for (i = 0; i < DataFieldCount; i++) {
-    if (a->last[i] && !b->last[i] || !a->last[i] && b->last[i]) return false;
+    if ((a->last[i] && !b->last[i]) || (!a->last[i] && b->last[i]))
+      return false;
   }
 
   for (i = 0; i < a->num_points; i++) {
