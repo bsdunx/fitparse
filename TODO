@@ -1,11 +1,9 @@
+* activity clean/verify points - a lot is done
 garmin smart record/hwm
-modify fix.c for doubles
 *   gpx write - mostly done, modulo laps and metadata time
 proper testing
 fix Makefile
-activity clean/verify points
 activity laps
-activity summary
 
 additional fixes (gaps, hr, power)
 tcx + fit data

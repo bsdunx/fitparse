@@ -174,7 +174,7 @@ static void write_field(FILE *f, const char *format, size_t i, DataField field,
     if (!*first) {
       fprintf(f, ",");
     }
-    if (d == UNSET_FIELD) {
+    if (!SET(d)) {
       fprintf(f, "%s", o.unset_value);
     } else {
       fprintf(f, format, d);

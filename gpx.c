@@ -189,31 +189,31 @@ static mxml_node_t *to_gpx_xml(Activity *a) {
     mxmlElementSetAttrf(trkpt, "lon", "%.7f",
                         a->data_points[i].data[Longitude]);
 
-    if (a->data_points[i].data[Altitude] != UNSET_FIELD) {
+    if (SET(a->data_points[i].data[Altitude])) {
       ele = mxmlNewElement(trkpt, "ele");
       mxmlNewTextf(ele, 0, "%.2f", a->data_points[i].data[Altitude]);
     }
-    if (a->data_points[i].data[Timestamp] != UNSET_FIELD) {
+    if (SET(a->data_points[i].data[Timestamp])) {
       time = mxmlNewElement(trkpt, "time");
       format_timestamp(buf, a->data_points[i].data[Timestamp]);
       mxmlNewText(time, 0, buf);
     }
 
-    if ((a->data_points[i].data[HeartRate] != UNSET_FIELD) ||
-        (a->data_points[i].data[Cadence] != UNSET_FIELD) ||
-        (a->data_points[i].data[Temperature] != UNSET_FIELD)) {
+    if (SET(a->data_points[i].data[HeartRate]) ||
+        SET(a->data_points[i].data[Cadence]) ||
+        SET(a->data_points[i].data[Temperature])) {
       extensions = mxmlNewElement(trkpt, "extensions");
       gpxtpx = mxmlNewElement(extensions, "gpxtpx:TrackPointExtension");
 
-      if (a->data_points[i].data[HeartRate] != UNSET_FIELD) {
+      if (SET(a->data_points[i].data[HeartRate])) {
         hr = mxmlNewElement(gpxtpx, "gpxtpx:hr");
         mxmlNewInteger(hr, a->data_points[i].data[HeartRate]);
       }
-      if (a->data_points[i].data[Cadence] != UNSET_FIELD) {
+      if (SET(a->data_points[i].data[Cadence])) {
         cad = mxmlNewElement(gpxtpx, "gpxtpx:cad");
         mxmlNewInteger(cad, a->data_points[i].data[Cadence]);
       }
-      if (a->data_points[i].data[Temperature] != UNSET_FIELD) {
+      if (SET(a->data_points[i].data[Temperature])) {
         atemp = mxmlNewElement(gpxtpx, "gpxtpx:atemp");
         mxmlNewInteger(atemp, a->data_points[i].data[Temperature]);
       }
