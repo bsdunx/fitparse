@@ -57,7 +57,6 @@ static int sax_cb(mxml_node_t *node, mxml_sax_event_t event, void *sax_data) {
   State *state = (State *)sax_data;
 
   if (event == MXML_SAX_ELEMENT_OPEN) {
-    name = mxmlGetElement(node);
     if (state->metadata) return 0;
 
     name = mxmlGetElement(node);
@@ -226,8 +225,6 @@ int gpx_write(char *filename, Activity *a) {
   assert(a != NULL);
 
   if (!a->last[Latitude] && !a->last[Longitude]) return 1;
-
-  f = fopen(filename, "w");
   if (!(f = fopen(filename, "w")) || !(tree = to_gpx_xml(a))) return 1;
 
   if (mxmlSaveFile(tree, f, MXML_NO_CALLBACK) < 0) {

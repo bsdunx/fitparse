@@ -2,3 +2,4 @@
 gpx
 tests/out
 test
+clang/*

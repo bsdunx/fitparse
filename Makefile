@@ -1,13 +1,13 @@
 OPTIMIZATION ?= -O2
 DEBUG = -g -ggdb
-WARN = -Wall -pedantic
+WARN = -Wall -Wextra -pedantic
 CFLAGS += $(WARN) $(DEBUG) -pthread -Ilib/mxml -Ilib/date
 
 #TARGET = fitparse
 #OBJECTS = activity.o fit.o tcx.o gpx.o
 OBJECTS = $(patsubst %.c, %.o, $(wildcard *.c))
-HEADERS = $(wildcard *.h)
-LIB_HEADERS = lib/mxml/mxml.h lib/date/libdate.h
+LIB_HEADERS = lib/mxml/mxml.h lib/date/date.h
+HEADERS = $(wildcard *.h) $(LIB_HEADERS)
 LIBS = lib/mxml/libmxml.a lib/date/libdate.a
 
 default: test
@@ -30,16 +30,21 @@ lib/mxml/libmxml.a: lib/mxml/Makefile
 lib/date/libdate.a:
 	$(MAKE) -C lib/date >/dev/null
 
+# TODO could make this more exact to minimize recompiles
 %.o: %.c $(HEADERS)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 format:
 	-@clang-format -style=Google -i *.c *.h
 
+clang:
+	-@rm -rf clang/*
+	-@scan-build -V -k -o `pwd`/clang $(MAKE) clean all
+
 clean:
-	rm -rf *.o util tests/out test gpx
+	rm -rf *.o util tests/out test gpx clang/*
 	cd lib/mxml >/dev/null && git clean -f -d -x >/dev/null && git checkout -- mxml.xml >/dev/null
 	cd lib/date >/dev/null && git clean -f -d -x >/dev/null
 
-.SILENT: lib/mxml/Makefile mxml clean
-.PHONY: default all mxml date clean format
+.SILENT: lib/mxml/Makefile clean
+.PHONY: default all clean format clang

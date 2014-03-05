@@ -47,7 +47,8 @@
 int fix_invalid_gps(Activity *a) {
   DataPoint dp, good;
   double delta_latitude, delta_longitude;
-  int errors = 0, last_good = -1, i, j;
+  int errors = 0, last_good = -1;
+	unsigned i, j;
 
   assert(a != NULL);
 
@@ -61,7 +62,7 @@ int fix_invalid_gps(Activity *a) {
           dp.data[Longitude] >= -180 && dp.data[Longitude] <= 180))
       continue;
 
-    if (last_good != -1 && (last_good + 1) != i) {
+    if (last_good != -1 && (unsigned)(last_good + 1) != i) {
       good = a->data_points[last_good];
 
       /* interpolate from last good to here then set last_good to here */
@@ -91,7 +92,7 @@ int fix_invalid_gps(Activity *a) {
   }
 
   /* fill to end... */
-  if (last_good != -1 && last_good != (a->num_points - 1)) {
+  if (last_good != -1 && (unsigned)last_good != (a->num_points - 1)) {
     good = a->data_points[last_good];
     /* fill from last_good to end with last_good */
     for (j = last_good + 1; j < a->num_points; j++) {

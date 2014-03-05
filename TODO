@@ -1,13 +1,23 @@
-* activity clean/verify points - a lot is done
+* gpx write - mostly done, modulo laps and metadata time
+* fix Makefile
+
+activity clean/verify points - a lot is done
+  - verify should add to errors
+  - confirm summary data is correct if present in file
+
+activity_get_summary function (should have laps?)
 garmin smart record/hwm
-*   gpx write - mostly done, modulo laps and metadata time
-proper testing
-fix Makefile
 activity laps
+command line client
+PROPER TESTS - need a test script?
 
 additional fixes (gaps, hr, power)
 tcx + fit data
+
 merge + split
-command line client
 tss/bike power etc
-strtod is locale dependent?
+better HR, power model, etc
+
+CHECK:
+make sure units are all correct
+

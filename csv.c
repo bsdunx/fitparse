@@ -107,7 +107,7 @@ static int read_csv_header(FILE *f, DataField data_fields[]) {
   return count;
 }
 
-static void read_csv_data(FILE *f, DataField data_fields[], int count,
+static void read_csv_data(FILE *f, DataField data_fields[], unsigned count,
                           Activity *a) {
   char buf[CSV_BUFSIZ], *comma, *last, field_str[CSV_FIELD_SIZE];
   unsigned i, j;
