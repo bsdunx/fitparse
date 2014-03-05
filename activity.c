@@ -64,7 +64,9 @@
   } while (0)
 
 static void init_summary(Summary *s) {
-  unsigned i;
+  DataField i;
+  s->elapsed = s->moving = s->calories = s->ascent = s->descent = 0;
+
   for (i = 0; i < DataFieldCount, i++) {
     s->point[Minimum].data[i] = DBL_MAX;
     s->point[Maximum].data[i] = DBL_MIN;
@@ -75,7 +77,6 @@ static void init_summary(Summary *s) {
 }
 
 Activity *activity_new(void) {
-  unsigned i;
   Activity *a;
 
   if (!(a = malloc(sizeof(*a)))) {
@@ -118,11 +119,9 @@ void activity_destroy(Activity *a) {
 static void derive_distance_position(DataPoint *last, DataPoint *dp) {
   double d_lat, d_lon, a, c, delta_d;
 
-  if (dp->data[Distance] == UNSET_FIELD &&
-      (dp->data[Latitude] != UNSET_FIELD &&
-       dp->data[Longitude] != UNSET_FIELD) &&
-      (last->data[Latitude] != UNSET_FIELD &&
-       last->data[Longitude] != UNSET_FIELD))
+  if (!SET(dp->data[Distance]) &&
+      (SET(dp->data[Latitude]) && SET(dp->data[Longitude]) &&
+      (SET(last->data[Latitude]) && SET(last->data[Longitude]))))
     return;
 
   /* Use the Haversine formula to calculate distance from lat and lon */
@@ -141,32 +140,35 @@ static void derive_speed_distance(DataPoint *last, DataPoint *dp) {
   double delta_t, delta_d;
 
   /* return if distance and speed data is fine, or if last values are bad */
-  if ((dp->data[Speed] != UNSET_FIELD &&
-       dp->data[Distance] != UNSET_FIELD) ||
-      (last->data[Timestamp] == UNSET_FIELD &&
-       last->data[Distance] == UNSET_FIELD))
+  if ((SET(dp->data[Speed]) && SET(dp->data[Distance])) ||
+      (SET(last->data[Timestamp]) && SET(last->data[Distance])))
     return;
 
   /* compute the elapsed time and distance traveled since the last recorded trackpoint */
   delta_t = dp->data[Timestamp] - last->data[Time];
 
   /* derive speed from distance */
-  if (dp->data[Speed] == UNSET_FIELD && dp->data[Distance] != UNSET_FIELD) {
+  if (!SET(dp->data[Speed]) && !SET(dp->data[Distance])) {
 
     delta_d = dp->data[Distance] - last->data[Distance];
     if (delta_t > 0) dp->data[Speed] = delta_d / delta_t * SECS_IN_HOUR;
-  } else if (dp->data[Distance] != UNSET_FIELD) {
+  } else if (SET(dp->data[Distance])) {
     /* otherwise derive distance from speed */
     delta_d = delta_t * dp->data[Speed] / SECS_IN_HOUR;
     dp->distance[Distance] = last->data[Distance] + delta_d;
   }
 }
 
-static void recalc_summary(DataPoint *dp) {
-  unsigned i;
+static inline bool moved(DataPoint *dp) {
+  return dp->speed > MOVING_SPEED;
+}
+
+static void recalc_summary(DataPoint *dp, DataPoint *last[]) {
+  DataField i;
+  double d_alt;
 
   for (i = 0; i < DataFieldCount; i++) {
-    if (dp->data[i] == UNSET_FIELD) {
+    if (!SET(dp->data[i])) {
       summary.unset[i] += 1;
       continue;
     }
@@ -178,14 +180,33 @@ static void recalc_summary(DataPoint *dp) {
     summary.point[Total].data[i] += dp->data[i];
     summary.point[Average].data[i] = summary.point[Total].data[i] / summary.unset[i];
   }
+
+  summary.elapsed = summary.point[Maximum].data[Timestamp] -
+                    summary.point[Minimum].data[Timestamp];
+
+  /* TODO calories */
+
+  if (last[Altitude] && SET(dp->data[Altitude])) {
+    d_alt = dp->data[Altitude] - last[Altitude]->data[Altitude];
+    if (d_alt > 0) {
+      summary.ascent += d_alt;
+    } else {
+      summary.descent += -d_alt;
+    }
+  }
+
+  if (last[Timestamp] && SET(dp->data[Timestamp]) && moved(dp)) {
+    summary.moving += dp->data[Timestamp] - last[Timestamp]->data[Timestamp];
+  }
 }
 
 /* TODO make sure we infer missing values and do corrections */
 /* TODO see gpx parser for additional checks we must perform */
 int activity_add_point(Activity *a, DataPoint *dp) {
-  unsigned i;
+  DataField i;
+  DataPoint *last = NULL;
 
-  if (!a->start_time && dp->data[Timestamp] != UNSET_FIELD) {
+  if (!a->start_time && SET(dp->data[Timestamp])) {
     a->start_time = dp->data[Timestamp];
   }
 
@@ -196,24 +217,25 @@ int activity_add_point(Activity *a, DataPoint *dp) {
 
   /* if this isn't the first time */
   if (a->num_points > 0) {
+    last = &(a->data_points[a->num_points - 1]);
     /* TODO - should we still run these functions to verify everything is correct? */
     /* TODO set errors and correct if they are wrong? */
-    derive_distance_position(&(a->data_points[a->num_points - 1]), DataPoint *dp);
-    derive_speed_distance(&(a->data_points[a->num_points - 1]), DataPoint *dp);
+    derive_distance_position(last, dp);
+    derive_speed_distance(last, dp);
     /* HWM/garmin smart recording shit */
   }
 
+  /* TODO eventually move to a lap based system */
+  recalc_summary(dp, a->last);
+
   for (i = 0; i < DataFieldCount; i++) {
     a->data_points[a->num_points].data[i] = dp->data[i];
-    if (dp->data[i] != UNSET_FIELD) {
+    if (SET(dp->data[i])) {
       a->last[i] = a->data_points[a->num_points];
     }
   }
 
-  /* TODO eventually move to a lap based system */
-  recalc_summary(a->data_points);
   a->num_points++;
-
   return 0;
 }
 
@@ -231,7 +253,8 @@ int activity_add_lap(Activity *a, uint32_t lap) {
 /* TODO */
 /* TODO double equals ? */
 bool activity_equal(Activity *a, Activity *b) {
-  unsigned i, j;
+  unsigned i;
+  DataField j;
 
   if (!a) return !b;
   if (a == b) return true;

@@ -46,6 +46,7 @@
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof(x[0]))
 
 #define SECS_IN_HOUR 3600
+#define MOVING_SPEED 0
 
 typedef enum { false, true } bool;
 
@@ -79,27 +80,28 @@ typedef struct {
   //uint8_t heart_rate_avg;
   //int8_t temperature_avg;
   //uint8_t lr_balance_avg;
+  //uint32_t speed_avg; [> 1000 * m/s <]
+  //uint32_t speed_max; [> 1000 * m/s <]
+  //uint16_t power_avg; [> TODO 3s, 10s, 30s - for speed as well? <]
+  //uint16_t power_max;
+  //uint32_t elevation; [> 100 * m <]
+
+  //uint32_t distance; [> 100 * m <] // Just want total...
 
   //uint16_t calories;
-  //uint32_t distance; [> 100 * m <]
-  //uint32_t elevation; [> 100 * m <]
   //uint32_t time; [> s <]
   //uint32_t time_elapsed; [> s <]
   //uint32_t ascent; [> 100 * m <]
   //uint32_t descent; [> 100 * m <]
   //[> function to calc pace from speed <]
-  //uint32_t speed_avg; [> 1000 * m/s <]
-  //uint32_t speed_max; [> 1000 * m/s <]
 
-  //uint16_t power_avg; [> TODO 3s, 10s, 30s - for speed as well? <]
-  //uint16_t power_max;
   //uint16_t power_kj; [> TODO correct? <]
-
   //[> TODO coggans powers - IF, NP, TSS, W/kg <]
 //} Summary;
 */
 
 #define UNSET_FIELD DBL_MAX
+#define SET(x) ((x) != UNSET_FIELD)
 
 static inline void unset_data_point(DataPoint *dp) {
   unsigned char i;
@@ -145,6 +147,7 @@ typedef enum {
 typedef struct {
   DataPoint point[SummaryPointCount];
   unsigned unset[DataFieldCount];
+  double elapsed, moving, calories, ascent, descent;
 } Summary;
 
 /*****************
