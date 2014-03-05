@@ -121,14 +121,16 @@ static void derive_distance_position(DataPoint *last, DataPoint *dp) {
 
   if (!SET(dp->data[Distance]) &&
       (SET(dp->data[Latitude]) && SET(dp->data[Longitude]) &&
-      (SET(last->data[Latitude]) && SET(last->data[Longitude]))))
+       (SET(last->data[Latitude]) && SET(last->data[Longitude]))))
     return;
 
   /* Use the Haversine formula to calculate distance from lat and lon */
   d_lat = to_radians(dp->data[Latitude] - last->data[Latitude]);
   d_lon = to_radians(dp->data[Longitude] - last->data[Longitude]);
-  a = sin(d_lat / 2) * sin(d_lat / 2) + cos(to_radians(dp->data[Latitude])) *
-      cos(toRadians(last->data[Latitude])) * sin(d_lon / 2) * sin(d_lon / 2);
+  a = sin(d_lat / 2) * sin(d_lat / 2) +
+      cos(to_radians(dp->data[Latitude])) *
+          cos(toRadians(last->data[Latitude])) * sin(d_lon / 2) *
+          sin(d_lon / 2);
   c = 4 * atan2(sqrt(a), 1 + sqrt(1 - fabs(a)));
   delta_d = 6371 * c;
 
@@ -144,7 +146,8 @@ static void derive_speed_distance(DataPoint *last, DataPoint *dp) {
       (SET(last->data[Timestamp]) && SET(last->data[Distance])))
     return;
 
-  /* compute the elapsed time and distance traveled since the last recorded trackpoint */
+  /* compute the elapsed time and distance traveled since the last recorded
+   * trackpoint */
   delta_t = dp->data[Timestamp] - last->data[Time];
 
   /* derive speed from distance */
@@ -159,9 +162,7 @@ static void derive_speed_distance(DataPoint *last, DataPoint *dp) {
   }
 }
 
-static inline bool moved(DataPoint *dp) {
-  return dp->speed > MOVING_SPEED;
-}
+static inline bool moved(DataPoint *dp) { return dp->speed > MOVING_SPEED; }
 
 static void recalc_summary(DataPoint *dp, DataPoint *last[]) {
   DataField i;
@@ -178,7 +179,8 @@ static void recalc_summary(DataPoint *dp, DataPoint *last[]) {
     if (dp->data[i] > a->summary.point[Maximum].data[i])
       summary.point[Maximum].data[i] = dp->data[i];
     summary.point[Total].data[i] += dp->data[i];
-    summary.point[Average].data[i] = summary.point[Total].data[i] / summary.unset[i];
+    summary.point[Average].data[i] =
+        summary.point[Total].data[i] / summary.unset[i];
   }
 
   summary.elapsed = summary.point[Maximum].data[Timestamp] -
@@ -218,7 +220,8 @@ int activity_add_point(Activity *a, DataPoint *dp) {
   /* if this isn't the first time */
   if (a->num_points > 0) {
     last = &(a->data_points[a->num_points - 1]);
-    /* TODO - should we still run these functions to verify everything is correct? */
+    /* TODO - should we still run these functions to verify everything is
+     * correct? */
     /* TODO set errors and correct if they are wrong? */
     derive_distance_position(last, dp);
     derive_speed_distance(last, dp);
@@ -260,8 +263,8 @@ bool activity_equal(Activity *a, Activity *b) {
   if (a == b) return true;
 
   /* TODO a->sport ? */
-  if ((a->num_points != b->num_points) ||
-      (a->start_time != b->start_time)) return false;
+  if ((a->num_points != b->num_points) || (a->start_time != b->start_time))
+    return false;
 
   for (i = 0; i < DataFieldCount; i++) {
     if (a->last[i] && !b->last[i] || !a->last[i] && b->last[i]) return false;

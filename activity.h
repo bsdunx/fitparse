@@ -48,9 +48,18 @@
 #define SECS_IN_HOUR 3600
 #define MOVING_SPEED 0
 
-typedef enum { false, true } bool;
+typedef enum {
+  false,
+  true
+} bool;
 
-typedef enum { CSV, GPX, TCX, FIT, UnknownFileFormat } FileFormat;
+typedef enum {
+  CSV,
+  GPX,
+  TCX,
+  FIT,
+  UnknownFileFormat
+} FileFormat;
 
 typedef enum {
   Timestamp,
@@ -157,7 +166,7 @@ typedef struct {
   Sport sport;
   FileFormat format; /* the original format it was read in from */
   uint32_t start_time;
-  uint32_t *laps;    /* TODO array of timestamps, always at least one */
+  uint32_t *laps; /* TODO array of timestamps, always at least one */
   DataPoint *data_points;
   DataPoint *last[DataFieldCount];
   Summary summary;

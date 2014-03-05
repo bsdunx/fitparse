@@ -119,10 +119,7 @@ static int sax_cb(mxml_node_t *node, mxml_sax_event_t event, void *sax_data) {
 Activity *gpx_read(char *filename) {
   FILE *f = NULL;
   mxml_node_t *tree;
-  State state = {NULL,
-                 false /* metadata */,
-                 true /* first_element */,
-                 {{0}}};
+  State state = {NULL, false /* metadata */, true /* first_element */, {{0}}};
   unset_data_point(&(state.dp));
 
   if (!(f = fopen(filename, "r"))) return NULL;
