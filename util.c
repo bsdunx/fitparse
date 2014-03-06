@@ -46,6 +46,15 @@ char *change_extension(char *filename, char *ext) {
   return filename;
 }
 
+FileFormat *file_format(char *ext) {
+  if (!strcmp("csv", ext)) return CSV;
+  if (!strcmp("gpx", ext)) return GPX;
+  if (!strcmp("tcx", ext)) return TCX;
+  if (!strcmp("fit", ext)) return FIT;
+
+  return UnknownFileFormat;
+}
+
 double parse_field(DataField field, DataPoint *dp, const char *str) {
   char *end;
 

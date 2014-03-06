@@ -38,13 +38,7 @@ static FileFormat file_format_from_name(char *filename) {
   char ext[4];
   strcpy(ext, extension(filename));
   downcase(ext);
-
-  if (!strcmp("csv", ext)) return CSV;
-  if (!strcmp("gpx", ext)) return GPX;
-  if (!strcmp("tcx", ext)) return TCX;
-  if (!strcmp("fit", ext)) return FIT;
-
-  return UnknownFileFormat;
+  return file_format(ext);
 }
 
 Activity *fitparse_read(char *filename) {

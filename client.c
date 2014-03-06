@@ -16,8 +16,14 @@
  */
 
 #include <getopt.h>
+#include <ctype.h>
 
 #include "fitparse.h"
+#include "util.h"
+
+#define CLIENT_VERSION "0.0.1"
+#define MAX_INPUT 32
+
 
 /*
  * --csv, --gpx, --fit, --tcx, --format={csv,gpx,fit,tcx} (downcase)
@@ -47,67 +53,129 @@
  *
  */
 
+typedef struct {
+  FileFormat format;
+  char **input, *output, *config;
+  bool merge, split, crop, summary, laps;
+  // TODO fix
+  Gender gender;
+  Units units;
+  unsigned hr, ftp
+}
 
+
+} Options;
+
+static int version(void) {
+    printf("client: %s fitparse: %s", CLIENT_VERSION, FITPARSE_VERSION);
+    return 0;
+}
+
+static int help(char *name) {
+  printf("Usage %s\n", name);
+  return 1;
+}
+
+static int validate_options(Options *options) {
+}
+
+static void destroy_options(Options *options) {
+  if (options->output) free(options->output);
+  if (options->config) free(options->config);
+  if (options->input) free(options->input);
+}
 
 int main(int argc, char *argv[]) {
 
-  ProgramOptions options;
+  Options options = {0};
 
-  static struct option long_options[] = {
-    {"help", required_argument, NULL, '?'},
+  static struct option longopts[] = {
+    {"help", required_argument, NULL, 'h'},
     {"version", required_argument, NULL, 'v'},
 
     {"output", required_argument, NULL, 'o'},
     {"config", required_argument, NULL, 'c'},
 
-    {"csv", no_argument, &options.csv, true},
-    {"gpx", no_argument, &options.gpx, true},
-    {"tcx", no_argument, &options.fit, true},
-    {"fit", no_argument, &options.tcx, true},
+    {"csv", no_argument, &options.format, CSV},
+    {"gpx", no_argument, &options.format, GPX},
+    {"tcx", no_argument, &options.format, TCX},
+    {"fit", no_argument, &options.format, FIT},
 
     {"summary", no_argument, &options.summary, true},
     {"laps", no_argument, &options.laps, true},
 
     {"merge", no_argument, &options.merge, true},
-    {"split", required_argument, &options.split_, true},
-    {"crop", required_argument, &options.crop_, true},
+    {"split", required_argument, &options.split, true},
+    {"crop", required_argument, &options.crop, true},
 
-    {"format", required_argument, &options.format_, true},
-    {"fix", required_argument, &options.fix_, true},
+    {"format", required_argument, NULL, 0},
+    {"fix", required_argument, NULL, 0},
 
-    {"gender", required_argument, &options.gender_, true},
-    {"units", required_argument, &options.units_, true},
-    {"hr", required_argument, &options.hr_, true},
-    {"ftp", required_argument, &options.ftp_, true},
+    {"gender", required_argument, NULL, 0},
+    {"units", required_argument, NULL, 0},
+    {"hr", required_argument, NULL, 0},
+    {"ftp", required_argument, NULL, 0},
   };
-  /*getopt_long_only(argc, argv,);*/
 
-  // one output file in general
-  // could be multiple outputs - splitting on lap or timestamp? - still, only one output name which is actually output base
-  // multiple inputs though
+  int c, longindex = 0;
+  while ((c = getopt_long(argc, argv, "vhoc", longopts, &longindex)) != -1) {
+    switch (c) {
+      case 0:
+        if (!strcmp("format", longopts[longindex].name)) {
+          downcase(optarg);
+          if ((options.format = file_format(optarg)) == UnknownFileFormat) {
+            fprintf(stderr, "Unknown file format: %s\n", optarg);
+            destroy_options(&options);
+            return usage(argv[0]);
+          }
+        }
 
-  if (merge) {
-    // can be one file
+        if (!strcmp("fix", longopts[longindex].name)) {
+          downcase(optarg);
+          // TODO
+        }
+
+        if (!strcmp("gender", longopts[longindex].name)) {
+          options.gender = (tolower(*optarg) == 'f') ? Female : Male;
+        }
+        if (!strcmp("units", longopts[longindex].name)) {
+          options.units = (tolower(*optarg) == 'i') ? Imperial : Metric;
+        }
+
+
+        // TODO
+        break;
+      case 'v':
+        destroy_options(&options);
+        return version();
+        break;
+      case 'h':
+        destroy_options(&options);
+        return usage(argv[0]);
+        break;
+      case 'o':
+        options.output = strdup(optarg);
+        break;
+      case 'c':
+        options.config = strdup(optarg);
+        break;
+      default:
+        destroy_options(&options);
+        return usage(argv[0]);
+    }
+  }
+  if (optind < argc) {
+    if (!(options.input = malloc((argc-optind) * sizeof(*options.input)))) return 1;
+    for (i= 0; optind < argc; optind++, i++) {
+      options.input[i] = argv[optind];
+    }
   }
 
-  if (split) {
-    // should be one file
+  if (!validate_options(&options)) {
+    destroy_options(&options);
+    return usage(argv[0]);
   }
 
-  if (crop) {
-      // should be one file
-  }
-
-  if (fix) {
-    // can be multiple files
-  }
-
-
-  // otherwise take multiple files and output them into format
-
-
-  // otherwise
-
-
+  destroy_options(&options);
   return 0;
 }

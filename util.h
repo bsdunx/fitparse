@@ -49,6 +49,7 @@ static inline char *downcase(char *str) {
 uint32_t parse_timestamp(const char *date);
 int format_timestamp(char *buf, uint32_t timestamp);
 char *change_extension(char *filename, char *ext);
+FileFormat *file_format(char *ext);
 double parse_field(DataField field, DataPoint *dp, const char *str);
 
 #endif /* _UTIL_H_ */

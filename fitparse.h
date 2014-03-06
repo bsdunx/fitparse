@@ -18,6 +18,8 @@
 #ifndef _FITPARSE_H_
 #define _FITPARSE_H_
 
+#define FITPARSE_VERSION "0.0.1"
+
 #include "activity.h"
 
 typedef Activity *(*ReadFn)(FILE *);
