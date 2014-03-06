@@ -18,6 +18,9 @@ merge + split
 tss/bike power etc
 better HR, power model, etc
 
+document the code
+look into ReadTheDocs or ronn
+
 CHECK:
 make sure units are all correct
 
