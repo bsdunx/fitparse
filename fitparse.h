@@ -20,14 +20,30 @@
 
 #include "activity.h"
 
-typedef Activity *(*ReadFn)(char *);
-typedef int (*WriteFn)(char *, Activity *);
+typedef Activity *(*ReadFn)(FILE *);
+typedef int (*WriteFn)(FILE *, Activity *);
 
 Activity *fitparse_read(char *filename);
-int fitparse_write(char *filename, Activity *activity);
+Activity *fitparse_read_file(FILE *file);
+int fitparse_write(char *filename, Activity *a);
 /* helper functions - could just call the *_read or *_write function directly */
 Activity *fitparse_read_format(char *filename, FileFormat format);
-int fitparse_write_format(char *filename, FileFormat format,
-                          Activity *activity);
+Activity *fitparse_read_format_file(FILE *file, FileFormat format);
+int fitparse_write_format(char *filename, FileFormat format, Activity *a);
+int fitparse_write_format_file(FILE *file, FileFormat format, Activity *a);
+
+/*
+//// TODO some things need athlete or options file...
+
+//[> TODO these will also change how much memory is needed <]
+//[> Creates new activity, doesnt erase old ones <]
+//Activity *fitparse_merge(Actvity *a, Activity *b);
+//[> Modifies old activity <]
+//int fitparse_crop(Activity *a, int *TODO);
+//[> Modifies old activity and returns new one <]
+//Activity *fitparse_split(Activity *a, int TODO);
+//[> Performs one or more fixes -> should use masks? <]
+//int fitparse_fix(Activity *a, Fix TODO);
+*/
 
 #endif /* _FITPARSE_H_ */

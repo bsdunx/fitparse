@@ -63,7 +63,7 @@ static DataField name_to_field(char *name) {
   } else if (!strcmp(name, "temperature") || !strcmp(name, "atemp") ||
              !strcmp(name, "temp")) {
     return Temperature;
-  } else {/* not found */
+  } else { /* not found */
     return DataFieldCount;
   }
 }
@@ -150,13 +150,11 @@ static void read_csv_data(FILE *f, DataField data_fields[], unsigned count,
 
 /* Fields can have several names and be in different orders, but we assume
  * all are doubles in base SI unit which we then convert into our format */
-Activity *csv_read(char *filename) {
-  FILE *f = NULL;
+Activity *csv_read(FILE *f) {
   DataField data_fields[CSV_MAX_FIELDS];
   Activity *a;
   unsigned count;
 
-  if (!(f = fopen(filename, "r"))) return NULL;
   if (!(count = read_csv_header(f, data_fields))) return NULL;
 
   a = activity_new();
@@ -183,16 +181,11 @@ static void write_field(FILE *f, const char *format, size_t i, DataField field,
   }
 }
 
-int csv_write_options(char *filename, Activity *a, CSVOptions o) {
-  FILE *f = NULL;
+int csv_write_options(FILE *f, Activity *a, CSVOptions o) {
   unsigned i;
   bool first = true;
 
   assert(a != NULL);
-
-  if (!(f = fopen(filename, "w"))) {
-    return 1;
-  }
 
   /* print header */
   for (i = 0; i < DataFieldCount; i++) {

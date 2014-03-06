@@ -115,13 +115,11 @@ static int sax_cb(mxml_node_t *node, mxml_sax_event_t event, void *sax_data) {
   return 0;
 }
 
-Activity *gpx_read(char *filename) {
-  FILE *f = NULL;
+Activity *gpx_read(FILE *f) {
   mxml_node_t *tree;
   State state = {NULL, false /* metadata */, true /* first_element */, {{0}}};
   unset_data_point(&(state.dp));
 
-  if (!(f = fopen(filename, "r"))) return NULL;
   if (!(state.activity = activity_new())) return NULL;
 
   if (!(tree = mxmlSAXLoadFile(NULL, f, MXML_OPAQUE_CALLBACK, sax_cb,
@@ -218,14 +216,14 @@ static mxml_node_t *to_gpx_xml(Activity *a) {
   return xml;
 }
 
-int gpx_write(char *filename, Activity *a) {
+int gpx_write(FILE *f, Activity *a) {
   FILE *f;
   mxml_node_t *tree;
 
   assert(a != NULL);
 
   if (!a->last[Latitude] && !a->last[Longitude]) return 1;
-  if (!(f = fopen(filename, "w")) || !(tree = to_gpx_xml(a))) return 1;
+  if (!(tree = to_gpx_xml(a))) return 1;
 
   if (mxmlSaveFile(tree, f, MXML_NO_CALLBACK) < 0) {
     mxmlDelete(tree);

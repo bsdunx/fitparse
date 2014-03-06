@@ -41,7 +41,7 @@
 
 #include "activity.h"
 
-Activity *gpx_read(char *filename);
-int gpx_write(char *filename, Activity *activity);
+Activity *gpx_read(FILE *f);
+int gpx_write(FILE *f, Activity *activity);
 
 #endif /* _GPX_H_ */

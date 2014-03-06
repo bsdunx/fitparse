@@ -28,18 +28,6 @@
 
 #define DEFAULT_WRITE_FORMAT CSV
 
-/* Athlete:
- *
- * name
- * gender (TRIMp)
- * preferences (metric, imperial)
- * power zones
- * hr zones (hrr, hrmax)
- * critical power
- * FTP
- * weight (kg/lbs)
- */
-
 /* indexed by FileFormat */
 static const ReadFn readers[] = {csv_read, gpx_read, tcx_read, fit_read};
 
@@ -60,6 +48,7 @@ static FileFormat file_format_from_name(char *filename) {
 }
 
 Activity *fitparse_read(char *filename) {
+  FILE *f;
   Activity *a;
   size_t i;
   FileFormat format = file_format_from_name(filename);
@@ -68,6 +57,12 @@ Activity *fitparse_read(char *filename) {
     return (a = fitparse_read_format(filename, format)) ? a : NULL;
   }
 
+  if (!(f = fopen(filename, "r"))) return NULL;
+
+  return fitparse_read_file(f);
+}
+
+Activity *fitparse_read_file(FILE *file) {
   for (i = 0; i < ARRAY_SIZE(readers); i++) {
     if ((a = readers[i](filename))) {
       return a;
@@ -77,19 +72,29 @@ Activity *fitparse_read(char *filename) {
   return NULL;
 }
 
-int fitparse_write(char *filename, Activity *activity) {
+int fitparse_write(char *filename, Activity *a) {
   FileFormat format = file_format_from_name(filename);
-  if (format == UnknownFileFormat) {
-    format = DEFAULT_WRITE_FORMAT;
-  }
-  return fitparse_write_format(filename, format, activity);
+  if (format == UnknownFileFormat) format = DEFAULT_WRITE_FORMAT;
+  if (!(f = fopen(filename, "w"))) return 1;
+  return fitparse_write_format(filename, format, q);
 }
 
 Activity *fitparse_read_format(char *filename, FileFormat format) {
-  return readers[format](filename);
+  FILE *f;
+  if (!(f = fopen(filename, "r"))) return NULL;
+  return fitparse_read_format_file(f, format);
 }
 
-int fitparse_write_format(char *filename, FileFormat format,
-                          Activity *activity) {
-  return writers[format](filename, activity);
+Activity *fitparse_read_format_file(FILE *f, FileFormat format) {
+  return readers[format](f);
+}
+
+int fitparse_write_format(char *filename, FileFormat format, Activity *a) {
+  FILE *f;
+  if (!(f = fopen(filename, "w"))) return 1;
+  return fitparse_write_format_file(f, format, a);
+}
+
+int fitparse_write_format_file(FILE *f, FileFormat format, Activity *a) {
+  return writers[format](f, a);
 }

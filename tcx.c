@@ -37,6 +37,6 @@
 
 #include "tcx.h"
 
-Activity *tcx_read(char *filename) { return NULL; }
+Activity *tcx_read(FILE *f) { return NULL; }
 
-int tcx_write(char *filename, Activity *activity) { return 1; }
+int tcx_write(FILE *f, Activity *activity) { return 1; }

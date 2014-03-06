@@ -48,7 +48,7 @@ int fix_invalid_gps(Activity *a) {
   DataPoint dp, good;
   double delta_latitude, delta_longitude;
   int errors = 0, last_good = -1;
-	unsigned i, j;
+  unsigned i, j;
 
   assert(a != NULL);
 

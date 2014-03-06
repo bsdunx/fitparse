@@ -33,3 +33,18 @@
  *     with this program; if not, write to the Free Software Foundation, Inc.,
  *     51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
+
+/* Athlete:
+ *
+ * name
+ * gender (TRIMp)
+ * preferences (metric, imperial)
+ * power zones
+ * hr zones (hrr, hrmax)
+ * critical power
+ * FTP
+ * weight (kg/lbs)
+ */
+
+/* should be in inih file format? */
+/* https://code.google.com/p/inih/ */

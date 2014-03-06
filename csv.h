@@ -32,12 +32,12 @@ typedef struct {
   /* Something Lap related? */
 } CSVOptions;
 
-Activity *csv_read(char *filename);
-int csv_write_options(char *filename, Activity *activity, CSVOptions options);
+Activity *csv_read(FILE *f);
+int csv_write_options(FILE *f, Activity *activity, CSVOptions options);
 
-static inline int csv_write(char *filename, Activity *activity) {
+static inline int csv_write(FILE *f, Activity *activity) {
   CSVOptions options = DEFAULT_CSV_OPTIONS;
-  return csv_write_options(filename, activity, options);
+  return csv_write_options(f, activity, options);
 }
 
 #endif /* _CSV_H_ */

@@ -36,6 +36,6 @@
 
 #include "fit.h"
 
-Activity *fit_read(char *filename) { return NULL; }
+Activity *fit_read(FILE *f) { return NULL; }
 
-int fit_write(char *filename, Activity *activity) { return 1; }
+int fit_write(FILE *f, Activity *activity) { return 1; }

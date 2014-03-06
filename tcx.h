@@ -40,7 +40,7 @@
 
 #include "activity.h"
 
-Activity *tcx_read(char *filename);
-int tcx_write(char *filename, Activity *activity);
+Activity *tcx_read(FILE *f);
+int tcx_write(FILE *f, Activity *activity);
 
 #endif /* _TCX_H_ */

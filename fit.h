@@ -39,7 +39,7 @@
 
 #include "activity.h"
 
-Activity *fit_read(char *filename);
-int fit_write(char *filename, Activity *activity);
+Activity *fit_read(FILE *f);
+int fit_write(FILE *f, Activity *activity);
 
 #endif /* _FIT_H_ */
