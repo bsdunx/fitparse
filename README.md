@@ -10,9 +10,10 @@ utilities for cleaning up potential errors in the data.
 
 ## Installation
 
-  make
-  make test # optional
-  make install
+    $ git clone https://github.com/scheibo/fitparse
+    $ cd fitparse && make
+    $ make test # optional
+    $ [sudo] make install
 
 ### Dependencies
 
@@ -25,22 +26,22 @@ unlikely to be preinstalled on your system. Advanced users are free to tweak the
 
 ## Features
 
-- small binary which is easy to build and incorporate into other projects
-- read and write files in .CSV, .GPX, .TCX and .FIT format
-- currently supports both running and bicycling files
-- corrects missing or invalid data and cleans up dropouts and spikes
-- merging and splitting files
-- calculating summary data for files
+ - small binary which is easy to build and incorporate into other projects
+ - read and write files in .CSV, .GPX, .TCX and .FIT format
+ - currently supports both running and bicycling files
+ - corrects missing or invalid data and cleans up dropouts and spikes
+ - merging and splitting files
+ - calculating summary data for files
 
 ## Examples
 
-  fitparse 20140218-1.gpx -o output.csv
+    fitparse 20140218-1.gpx -o output.csv
 
-  fitparse --merge 20140218-1.gpx 20140218-2.tcx -o merged.fit
+    fitparse --merge 20140218-1.gpx 20140218-2.tcx -o merged.fit
 
-  fitparse --summary merged.fit
+    fitparse --summary merged.fit
 
-  fitparse --laps 20149218-1.gpx
+    fitparse --laps 20149218-1.gpx
 
 TODO: add terminal gif.
 
@@ -56,8 +57,8 @@ TODO
 
 ## Future
 
-- support additional file types
-- support swimming / multisport
+ - support additional file types
+ - support swimming / multisport
 
 ## Bugs
 
@@ -74,6 +75,6 @@ Much of the code for `fitparse` was influenced by GoldenCheetah, and certain
 files reflect this in their headers. `fitparse` also relies on several libraries
 bundled in the `lib/` directory, which have their own licenses. For reference:
 
-- [GoldenCheetah](https://github.com/GoldenCheetah/GoldenCheetah) - GPLv2
-- [Mini-XML](https://github.com/scheibo/mxml) - LGPLv2 w/ static linking
-- [date](https://github.com/scheibo/date) - GPLv2
+ - [GoldenCheetah](https://github.com/GoldenCheetah/GoldenCheetah) - GPLv2
+ - [Mini-XML](https://github.com/scheibo/mxml) - LGPLv2 w/ static linking
+ - [date](https://github.com/scheibo/date) - GPLv2
