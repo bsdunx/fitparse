@@ -66,13 +66,6 @@ Activity *fitparse_read_file(FILE *file) {
   return NULL;
 }
 
-int fitparse_write(char *filename, Activity *a) {
-  FileFormat format = file_format_from_name(filename);
-  if (format == UnknownFileFormat) format = DEFAULT_WRITE_FORMAT;
-  if (!(f = fopen(filename, "w"))) return 1;
-  return fitparse_write_format(filename, format, q);
-}
-
 Activity *fitparse_read_format(char *filename, FileFormat format) {
   FILE *f;
   if (!(f = fopen(filename, "r"))) return NULL;
@@ -81,6 +74,12 @@ Activity *fitparse_read_format(char *filename, FileFormat format) {
 
 Activity *fitparse_read_format_file(FILE *f, FileFormat format) {
   return readers[format](f);
+
+}
+
+int fitparse_write(char *filename, Activity *a) {
+  FileFormat format = file_format_from_name(filename);
+  return fitparse_write_format(filename, format, q);
 }
 
 int fitparse_write_format(char *filename, FileFormat format, Activity *a) {
@@ -90,5 +89,6 @@ int fitparse_write_format(char *filename, FileFormat format, Activity *a) {
 }
 
 int fitparse_write_format_file(FILE *f, FileFormat format, Activity *a) {
+  if (format == UnknownFileFormat) format = DEFAULT_WRITE_FORMAT;
   return writers[format](f, a);
 }

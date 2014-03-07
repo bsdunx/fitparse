@@ -17,6 +17,7 @@
 
 #include <getopt.h>
 #include <ctype.h>
+#include <unistd.h>
 
 #include "fitparse.h"
 #include "util.h"
@@ -53,6 +54,7 @@
  *
  */
 
+
 typedef struct {
   FileFormat format;
   char **input, *output, *config;
@@ -60,10 +62,7 @@ typedef struct {
   // TODO fix
   Gender gender;
   Units units;
-  unsigned hr, ftp
-}
-
-
+  unsigned input_count, hr, ftp
 } Options;
 
 static int version(void) {
@@ -72,7 +71,26 @@ static int version(void) {
 }
 
 static int help(char *name) {
-  printf("Usage %s\n", name);
+  fprintf(stderr,
+  "Usage: %s input -o output\n"
+  "       %s input-1 ... input-N --format=fit\n"
+  "       %s --format=gpx < input > output\n"
+  "\n"
+  "Options:\n"
+  "    -o, --output           the name of the output file, (default to 'stdout')\n"
+  "    --summary              print summary data for the input files\n"
+  "    --format=<format>      the desired output format\n"
+  "    --{csv,fit,tcx,gpx}    shorthands for the output format\n"
+  "    --merge                merge all the input files into output\n"
+  "    --split                TODO\n"
+  "    --crop                 TODO\n"
+  "    --fix=<type>           TODO\n"
+  "    -c, --config           the name of the config file to read in\n"
+  "    --hr=<bpm>             the HR max in BPM to use for summary data\n"
+  "    --gender=<m,f>         the gender to use for summary data\n"
+  "    --ftp=<watts>          the FTP in watts to use for summary data\n"
+  "    --units=<units>        the units to use for summary data (defaults to 'metric')\n"
+  );
   return 1;
 }
 
@@ -85,9 +103,55 @@ static void destroy_options(Options *options) {
   if (options->input) free(options->input);
 }
 
-int main(int argc, char *argv[]) {
+static int run(options) {
+  unsigned i, j;
+  Activity *activities[];
 
-  Options options = {0};
+  if (!(activities = malloc(sizeof(*activities) * (options.input_count || 1))))
+    return 1;
+
+  if (!options.input_count) { // no input files, read from stdin
+    if (!(activities[0] = fitparse_read_file(STDIN_FILENO))) {
+      fprintf(stderr, "Error reading from stdin\n");
+      return 1;
+    }
+    options.input_count = 1;
+  } else {
+    for (i = 0; i < options.input_count; i++) {
+      if (!(activities[i] = fitparse_read(options.input[i]))) {
+        fprintf(stderr, "Error reading file %s\n", options.input[i]);
+        for (j = 0; j < i; j++) destroy_activity(activities[j]);
+        return 1;
+      }
+    }
+  }
+
+  if (options.input_count > 1) { // ignore output flags, just rename files
+    for (i = 0; i < options.input_count; i++) {
+      /* TODO rename change_extension crap */
+      /*if (options.format) */
+      /*fitparse_write_format_file(name, options.format, activities[0]);*/
+      destroy(activities[i]);
+    }
+  } else if (*options.output) {
+    if (options.format != UnknownFormat) {
+      fitparse_write_format(options.output, options.format, activities[0]);
+    } else {
+      fitparse_write(options.output, activities[0]);
+    }
+    destroy(activities[0]);
+  } else { // no output file name, output to stdout
+    fitparse_write_format_file(STDOUT_FILENO, options.format, activities[0]);
+    destroy(activities[0]);
+  }
+
+  return 0;
+}
+
+int main(int argc, char *argv[]) {
+  Options options = {UnknownFormat};
+  int err, c, longindex = 0;
+  char *end;
 
   static struct option longopts[] = {
     {"help", required_argument, NULL, 'h'},
@@ -117,7 +181,6 @@ int main(int argc, char *argv[]) {
     {"ftp", required_argument, NULL, 0},
   };
 
-  int c, longindex = 0;
   while ((c = getopt_long(argc, argv, "vhoc", longopts, &longindex)) != -1) {
     switch (c) {
       case 0:
@@ -125,25 +188,39 @@ int main(int argc, char *argv[]) {
           downcase(optarg);
           if ((options.format = file_format(optarg)) == UnknownFileFormat) {
             fprintf(stderr, "Unknown file format: %s\n", optarg);
-            destroy_options(&options);
-            return usage(argv[0]);
+            goto usage;
           }
         }
-
         if (!strcmp("fix", longopts[longindex].name)) {
           downcase(optarg);
-          // TODO
+          /* TODO */
         }
-
         if (!strcmp("gender", longopts[longindex].name)) {
           options.gender = (tolower(*optarg) == 'f') ? Female : Male;
         }
         if (!strcmp("units", longopts[longindex].name)) {
           options.units = (tolower(*optarg) == 'i') ? Imperial : Metric;
         }
-
-
-        // TODO
+        if (!strcmp("hr", longopts[longindex].name)) {
+          options.hr = strtol(optarg, &end);
+          if (*end) {
+            fprintf(stderr, "Invalid argument for HR: %s\n", optarg);
+            goto usage;
+          }
+        }
+        if (!strcmp("ftp", longopts[longindex].name)) {
+          options.ftp = strtol(optarg, &end);
+          if (*end) {
+            fprintf(stderr, "Invalid argument for FTP: %s\n", optarg);
+            goto usage;
+          }
+        }
+        if (!strcmp("split", longopts[longindex].name)) {
+          /* TODO */
+        }
+        if (!strcmp("crop", longopts[longindex].name)) {
+          /* TODO */
+        }
         break;
       case 'v':
         destroy_options(&options);
@@ -160,22 +237,31 @@ int main(int argc, char *argv[]) {
         options.config = strdup(optarg);
         break;
       default:
-        destroy_options(&options);
-        return usage(argv[0]);
+        goto usage;
     }
   }
   if (optind < argc) {
-    if (!(options.input = malloc((argc-optind) * sizeof(*options.input)))) return 1;
+    options.input_count= argc - optind
+    options.input = malloc(options.input_count * sizeof(*options.input));
+    if (!(options.input)) {
+      fprintf(stderr, "Memory error\n");
+      destroy_options(&options);
+      return 1;
+    }
     for (i= 0; optind < argc; optind++, i++) {
       options.input[i] = argv[optind];
     }
   }
 
   if (!validate_options(&options)) {
-    destroy_options(&options);
-    return usage(argv[0]);
+    goto usage;
   }
 
+  err = run(options);
+
   destroy_options(&options);
-  return 0;
+  return err;
+usage:
+  destroy_options(&options);
+  return usage(argv[0]);
 }
