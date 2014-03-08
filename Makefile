@@ -1,21 +1,28 @@
 OPTIMIZATION ?= -O2
 DEBUG = -g -ggdb
-WARN = -Wall -Wextra -pedantic
+WARN = -Wall -Wextra -pedantic -Wno-missing-field-initializers -Wno-unused-parameter
 CFLAGS += $(WARN) $(DEBUG) -pthread -Ilib/mxml -Ilib/date
 
-#TARGET = fitparse
-#OBJECTS = activity.o fit.o tcx.o gpx.o
-OBJECTS = $(patsubst %.c, %.o, $(wildcard *.c))
+TARGET = libfitparse.a
+MAINS = test.o client.o
+OBJECTS = $(filter-out $(MAINS), $(patsubst %.c, %.o, $(wildcard *.c)))
 LIB_HEADERS = lib/mxml/mxml.h lib/date/date.h
 HEADERS = $(wildcard *.h) $(LIB_HEADERS)
 LIBS = lib/mxml/libmxml.a lib/date/libdate.a
 
-default: test
+default: $(TARGET)
 
-all: test
+all: $(TARGET) fitparse test
+
+fitparse: client.o $(TARGET)
+	$(CC) $(CFLAGS) $^ -o $@
+
+$(TARGET): $(OBJECTS) $(LIBS)
+	ar rcs $@ $(OBJECTS)
+	libtool -static $@ $(LIBS) -o $@
 
 test: $(OBJECTS) $(LIBS) $(HEADERS)
-	$(CC) $(CFLAGS) $(OBJECTS) $(LIBS) -Wall -o $@
+	$(CC) $(CFLAGS) $(OBJECTS) $(LIBS) -o $@
 	mkdir -p tests/out
 
 test.o: test.c $(HEADERS)
@@ -42,7 +49,7 @@ clang:
 	-@scan-build -V -k -o `pwd`/clang $(MAKE) clean all
 
 clean:
-	rm -rf *.o util tests/out test gpx clang/*
+	rm -rf *.a *.o util tests/out test gpx clang/*
 	cd lib/mxml >/dev/null && git clean -f -d -x >/dev/null && git checkout -- mxml.xml >/dev/null
 	cd lib/date >/dev/null && git clean -f -d -x >/dev/null
 

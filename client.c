@@ -20,49 +20,20 @@
 #include <unistd.h>
 
 #include "fitparse.h"
+#include "activity.h"
 #include "util.h"
 
 #define CLIENT_VERSION "0.0.1"
 #define MAX_INPUT 32
 
-
-/*
- * --csv, --gpx, --fit, --tcx, --format={csv,gpx,fit,tcx} (downcase)
- * all output format
- *
- * -o/-output = file name to output (could also just be second name)
- *
- * input format not required - can always tell or guess
- *
- * --merge - takes two files
- * --split - needs a timestamp... (or distance?)
- * --crop - needs a timestamp (or distance?)
- *
- * --fix, --fix={gps,hr,power,gaps,all} (downcase)
- *
- * --summary - human readable summary
- * --laps - basic laps summary
- *
- *  also reads from stdin and outputs to stdout by default
- *
- * -c/config = config file (has user data and options to pass to things like csv
- *write)
- * --gender=m,f --units=metric,imperial (u) --hrmax=205  --ftp=300
- *
- *
- *  --help (?), --version
- *
- */
-
-
 typedef struct {
-  FileFormat format;
+  int format;
+  unsigned input_count, hr, ftp;
   char **input, *output, *config;
-  bool merge, split, crop, summary, laps;
-  // TODO fix
+  int merge, split, crop, summary, laps;
   Gender gender;
   Units units;
-  unsigned input_count, hr, ftp
+  /* TODO fix */
 } Options;
 
 static int version(void) {
@@ -70,31 +41,36 @@ static int version(void) {
     return 0;
 }
 
-static int help(char *name) {
+static int usage(char *name) {
   fprintf(stderr,
   "Usage: %s input -o output\n"
   "       %s input-1 ... input-N --format=fit\n"
   "       %s --format=gpx < input > output\n"
-  "\n"
+  "\n", name, name, name);
+  fprintf(stderr,
   "Options:\n"
   "    -o, --output           the name of the output file, (default to 'stdout')\n"
-  "    --summary              print summary data for the input files\n"
+  "    -c, --config           the name of the config file to read in\n"
   "    --format=<format>      the desired output format\n"
-  "    --{csv,fit,tcx,gpx}    shorthands for the output format\n"
+  "    --{csv,fit,tcx,gpx}    shorthands for the output format\n");
+  fprintf(stderr,
+  "    --hr=<bpm>             the HR max in BPM to use for summary data\n"
+  "    --gender=<m,f>         the gender to use for summary data\n"
+  "    --ftp=<watts>          the FTP in watts to use for summary data\n"
+  "    --units=<units>        the units to use for summary data (defaults to 'metric')\n");
+  fprintf(stderr,
   "    --merge                merge all the input files into output\n"
   "    --split                TODO\n"
   "    --crop                 TODO\n"
   "    --fix=<type>           TODO\n"
-  "    -c, --config           the name of the config file to read in\n"
-  "    --hr=<bpm>             the HR max in BPM to use for summary data\n"
-  "    --gender=<m,f>         the gender to use for summary data\n"
-  "    --ftp=<watts>          the FTP in watts to use for summary data\n"
-  "    --units=<units>        the units to use for summary data (defaults to 'metric')\n"
-  );
+  "    --summary              print summary data for the input files\n"
+  "    --laps                 print lap summary data for the input files\n");
   return 1;
 }
 
 static int validate_options(Options *options) {
+  (void) options;
+  return 0;
 }
 
 static void destroy_options(Options *options) {
@@ -103,54 +79,55 @@ static void destroy_options(Options *options) {
   if (options->input) free(options->input);
 }
 
-static int run(options) {
+static int run(Options *options) {
   unsigned i, j;
-  Activity *activities[];
+  Activity **activities;
 
-  if (!(activities = malloc(sizeof(*activities) * (options.input_count || 1))))
+  if (!(activities = malloc(sizeof(*activities) * (options->input_count || 1))))
     return 1;
 
-  if (!options.input_count) { // no input files, read from stdin
-    if (!(activities[0] = fitparse_read_file(STDIN_FILENO))) {
+  if (!options->input_count) { /* no input files, read from stdin */
+    if (!(activities[0] = fitparse_read_file(stdin))) {
       fprintf(stderr, "Error reading from stdin\n");
       return 1;
     }
-    options.input_count = 1;
+    options->input_count = 1;
   } else {
-    for (i = 0; i < options.input_count; i++) {
-      if (!(activities[i] = fitparse_read(options.input[i]))) {
-        fprintf(stderr, "Error reading file %s\n", options.input[i]);
-        for (j = 0; j < i; j++) destroy_activity(activities[j]);
+    for (i = 0; i < options->input_count; i++) {
+      if (!(activities[i] = fitparse_read(options->input[i]))) {
+        fprintf(stderr, "Error reading file %s\n", options->input[i]);
+        for (j = 0; j < i; j++) activity_destroy(activities[j]);
         return 1;
       }
     }
   }
 
-  if (options.input_count > 1) { // ignore output flags, just rename files
-    for (i = 0; i < options.input_count; i++) {
+  if (options->input_count > 1) { /* ignore output flags, just rename files */
+    for (i = 0; i < options->input_count; i++) {
       /* TODO rename change_extension crap */
-      /*if (options.format) */
-      /*fitparse_write_format_file(name, options.format, activities[0]);*/
-      destroy(activities[i]);
+      /*if (options->format) */
+      /*fitparse_write_format_file(name, options->format, activities[0]);*/
+      activity_destroy(activities[i]);
     }
-  } else if (*options.output) {
-    if (options.format != UnknownFormat) {
-      fitparse_write_format(options.output, options.format, activities[0]);
+  } else if (*(options->output)) {
+    if (options->format != UnknownFileFormat) {
+      fitparse_write_format(options->output, options->format, activities[0]);
     } else {
-      fitparse_write(options.output, activities[0]);
+      fitparse_write(options->output, activities[0]);
     }
-    destroy(activities[0]);
-  } else { // no output file name, output to stdout
-    fitparse_write_format_file(STDOUT_FILENO, options.format, activities[0]);
-    destroy(activities[0]);
+    activity_destroy(activities[0]);
+  } else { /* no output file name, output to stdout */
+    fitparse_write_format_file(stdout, options->format, activities[0]);
+    activity_destroy(activities[0]);
   }
 
   return 0;
 }
 
 int main(int argc, char *argv[]) {
-  Options options = {UnknownFormat};
+  static Options options = {UnknownFileFormat};
   int err, c, longindex = 0;
+  unsigned i;
   char *end;
 
   static struct option longopts[] = {
@@ -202,14 +179,14 @@ int main(int argc, char *argv[]) {
           options.units = (tolower(*optarg) == 'i') ? Imperial : Metric;
         }
         if (!strcmp("hr", longopts[longindex].name)) {
-          options.hr = strtol(optarg, &end);
+          options.hr = (unsigned)strtoul(optarg, &end, 10);
           if (*end) {
             fprintf(stderr, "Invalid argument for HR: %s\n", optarg);
             goto usage;
           }
         }
         if (!strcmp("ftp", longopts[longindex].name)) {
-          options.ftp = strtol(optarg, &end);
+          options.ftp = (unsigned)strtoul(optarg, &end, 10);
           if (*end) {
             fprintf(stderr, "Invalid argument for FTP: %s\n", optarg);
             goto usage;
@@ -227,8 +204,7 @@ int main(int argc, char *argv[]) {
         return version();
         break;
       case 'h':
-        destroy_options(&options);
-        return usage(argv[0]);
+        goto usage;
         break;
       case 'o':
         options.output = strdup(optarg);
@@ -241,7 +217,7 @@ int main(int argc, char *argv[]) {
     }
   }
   if (optind < argc) {
-    options.input_count= argc - optind
+    options.input_count = argc - optind;
     options.input = malloc(options.input_count * sizeof(*options.input));
     if (!(options.input)) {
       fprintf(stderr, "Memory error\n");
@@ -257,7 +233,7 @@ int main(int argc, char *argv[]) {
     goto usage;
   }
 
-  err = run(options);
+  err = run(&options);
 
   destroy_options(&options);
   return err;

@@ -50,4 +50,4 @@
 /* https://code.google.com/p/inih/ */
 
 typedef enum { Male, Female } Gender;
-typedef enum { Metrics, Imperial } Units;
+typedef enum { Metric, Imperial } Units;

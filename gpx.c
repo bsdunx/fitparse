@@ -217,7 +217,6 @@ static mxml_node_t *to_gpx_xml(Activity *a) {
 }
 
 int gpx_write(FILE *f, Activity *a) {
-  FILE *f;
   mxml_node_t *tree;
 
   assert(a != NULL);

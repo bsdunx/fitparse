@@ -44,7 +44,6 @@ static FileFormat file_format_from_name(char *filename) {
 Activity *fitparse_read(char *filename) {
   FILE *f;
   Activity *a;
-  size_t i;
   FileFormat format = file_format_from_name(filename);
 
   if (format != UnknownFileFormat) {
@@ -56,9 +55,11 @@ Activity *fitparse_read(char *filename) {
   return fitparse_read_file(f);
 }
 
-Activity *fitparse_read_file(FILE *file) {
+Activity *fitparse_read_file(FILE *f) {
+  Activity *a;
+  size_t i;
   for (i = 0; i < ARRAY_SIZE(readers); i++) {
-    if ((a = readers[i](filename))) {
+    if ((a = readers[i](f))) {
       return a;
     }
   }
@@ -79,7 +80,7 @@ Activity *fitparse_read_format_file(FILE *f, FileFormat format) {
 
 int fitparse_write(char *filename, Activity *a) {
   FileFormat format = file_format_from_name(filename);
-  return fitparse_write_format(filename, format, q);
+  return fitparse_write_format(filename, format, a);
 }
 
 int fitparse_write_format(char *filename, FileFormat format, Activity *a) {

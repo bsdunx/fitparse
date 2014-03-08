@@ -21,6 +21,7 @@
 #define FITPARSE_VERSION "0.0.1"
 
 #include "activity.h"
+#include "athlete.h"
 
 typedef Activity *(*ReadFn)(FILE *);
 typedef int (*WriteFn)(FILE *, Activity *);
