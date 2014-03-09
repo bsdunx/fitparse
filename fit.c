@@ -36,6 +36,34 @@
 
 #include "fit.h"
 
+/**
+ * fit_read
+ *
+ * Description:
+ *  Read in the FIT file pointed to by `f` and return an `Activity`.
+ *
+ * Parameters:
+ *  f - The file descriptor for the FIT file to read.
+ *
+ * Return value:
+ *  NULL - unable to read in FIT or invalid FIT file.
+ *  valid pointer - a valid pointer to a newly allocated Activity instance.
+ *                  The caller is responsible for freeing the activity.
+ */
 Activity *fit_read(FILE *f) { return NULL; }
 
+/**
+ * fit_write
+ *
+ * Description:
+ *  Write the `Activity` to `f` in FIT format.
+ *
+ * Parameters:
+ *  f - the file descriptor for the FIT file to write to.
+ *  a - the `Activity` to write.
+ *
+ * Return value:
+ *  0 - successfully wrote FIT file.
+ *  1 - unable to write FIT.
+ */
 int fit_write(FILE *f, Activity *activity) { return 1; }

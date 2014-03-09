@@ -22,11 +22,31 @@
 #include "csv.h"
 #include "util.h"
 
+/**
+ * DATA_FIELDS
+ *
+ * Description:
+ *  Mapping from `DataField` to field name string.
+ */
 static const char *DATA_FIELDS[DataFieldCount] = {
     "timestamp",  "latitude", "longitude",  "altitude",
     "distance",   "speed",    "power",      "grade",
     "heart_rate", "cadence",  "lr_balance", "temperature"};
 
+/**
+ * name_to_field
+ *
+ * Description:
+ *  Fairly relaxed ,apping between a field name and a `DataField`.
+ *  Ignores case and leading spaces and allows for multiple variations.
+ *
+ * Parameters:
+ *  name - the field name to map.
+ *
+ * Return value:
+ *  valid DataField - successfully mapped `name` to `DataField`.
+ *  DataFieldCount - unable to match `name` to a field.
+ */
 static DataField name_to_field(char *name) {
   /* deal with optional leading whitespace */
   while (isspace(*name)) name++;
@@ -68,6 +88,24 @@ static DataField name_to_field(char *name) {
   }
 }
 
+/**
+ * read_csv_header
+ *
+ * Description:
+ *  Reads a CSV header and fills in an array of `DataField`s which provides a
+ *  mapping between CSV field and `DataField`. We will only read at most
+ *  `DataFieldCount` actual data fields from the CSV, and the fields may be
+ *  duplicated (the last value takes precedence).
+ *
+ * Parameters:
+ *  f - the file descriptor for the CSV file to read.
+ *  data_fields - an array which is built up by the function that determines
+ *                the order of `DataField`s within the CSV.
+ *
+ * Return value:
+ *  0 - unable to read in the header
+ *  1 - the number of `DataField`s within `data_fields`.
+ */
 static int read_csv_header(FILE *f, DataField data_fields[]) {
   char buf[CSV_BUFSIZ], *comma, *last, field_str[CSV_FIELD_SIZE];
   DataField field;
@@ -107,6 +145,18 @@ static int read_csv_header(FILE *f, DataField data_fields[]) {
   return count;
 }
 
+/**
+ * read_csv_data
+ *
+ * Description:
+ *
+ * Parameters:
+ *  f - the file descriptor for the CSV file to read.
+ *  data_fields - the array built by `read_csv_headers` mapping CSV field to
+ *                `DataField`.
+ *  count - the number of `DataField`s in `data_fields`.
+ *  a - the `Activity` to read the data into.
+ */
 static void read_csv_data(FILE *f, DataField data_fields[], unsigned count,
                           Activity *a) {
   char buf[CSV_BUFSIZ], *comma, *last, field_str[CSV_FIELD_SIZE];
@@ -148,8 +198,22 @@ static void read_csv_data(FILE *f, DataField data_fields[], unsigned count,
   }
 }
 
-/* Fields can have several names and be in different orders, but we assume
- * all are doubles in base SI unit which we then convert into our format */
+/**
+ * csv_read
+ *
+ * Description:
+ *  Read in the CSV file pointed to by `f` and return an `Activity`.
+ *  Fields can have several names and be in different orders, but we assume
+ *  all are doubles in base SI unit which we then convert into our format.
+ *
+ * Parameters:
+ *  f - the file descriptor for the CSV file to read.
+ *
+ * Return value:
+ *  NULL - unable to read in CSV or invalid CSV file.
+ *  valid pointer - a valid pointer to a newly allocated Activity instance.
+ *                  The caller is responsible for freeing the activity.
+ */
 Activity *csv_read(FILE *f) {
   DataField data_fields[CSV_MAX_FIELDS];
   Activity *a;
@@ -165,6 +229,22 @@ Activity *csv_read(FILE *f) {
   return a;
 }
 
+/**
+ * write_field
+ *
+ * Description:
+ *  Writes a given data field of the `Activity` to `f` as allowed by `o`.
+ *
+ * Parameters:
+ *  f - the file descriptor for the CSV file to write to.
+ *  format - the format string to display the field in.
+ *  i - the current data point being written.
+ *  field - the field to write.
+ *  a - the `Activity` to write.
+ *  o - the options to use when printing the `Activity`.
+ *  first - a pointer to a boolean determining whether this is the first
+ *          written field of a given `DataPoint`.
+ */
 static void write_field(FILE *f, const char *format, size_t i, DataField field,
                         Activity *a, CSVOptions o, bool *first) {
   double d = a->data_points[i].data[field];
@@ -181,6 +261,21 @@ static void write_field(FILE *f, const char *format, size_t i, DataField field,
   }
 }
 
+/**
+ * csv_write_options
+ *
+ * Description:
+ *  Write the `Activity` to `f` in CSV format given the options provided.
+ *
+ * Parameters:
+ *  f - the file descriptor for the CSV file to write to.
+ *  a - the `Activity` to write.
+ *  o - the options to use when printing the `Activity`.
+ *
+ * Return value:
+ *  0 - successfully wrote CSV file.
+ *  1 - unable to write CSV.
+ */
 int csv_write_options(FILE *f, Activity *a, CSVOptions o) {
   unsigned i;
   bool first = true;

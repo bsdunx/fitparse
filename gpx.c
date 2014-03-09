@@ -45,6 +45,18 @@
 #include "mxml.h"
 #include "util.h"
 
+/**
+ * State
+ *
+ * Description:
+ *  Structure used to maintain state between calls to the sax_cb.
+ *
+ * Fields:
+ *  activity - the activity being constructed during parsing.
+ *  metadata - whether or not we are currently inside the <metadata> tag.
+ *  first_element - whether we have seen the first element yet.
+ *  dp - the current datapoint which we are building up to add to `Activity`.
+ */
 typedef struct {
   Activity *activity;
   bool metadata;
@@ -52,6 +64,24 @@ typedef struct {
   DataPoint dp;
 } State;
 
+/**
+ * sax_cb
+ *
+ * Description:
+ *  MXML SAX callback which processes events and nodes as a stream. We retain
+ *  nodes which have data and process them on ELEMNT_CLOSE so that we know what
+ *  kind of node was read.
+ *
+ * Parameters:
+ *  node - the current node in the tree being proessed.
+ *  event - the type of SAX event currently being processed.
+ *  sax_data - a pointer to the `State` object used to build up the `Activity`.
+ *
+ * Return value:
+ *  0 - continue processing.
+ *  1 - stop processing the XML and clean up.
+ *      Added to enable to MXML to realize we're not processing a GPX file.
+ */
 static int sax_cb(mxml_node_t *node, mxml_sax_event_t event, void *sax_data) {
   const char *name, *attr, *data;
   State *state = (State *)sax_data;
@@ -115,6 +145,20 @@ static int sax_cb(mxml_node_t *node, mxml_sax_event_t event, void *sax_data) {
   return 0;
 }
 
+/**
+ * gpx_read
+ *
+ * Description:
+ *  Read in the GPX file pointed to by `f` and return an `Activity`.
+ *
+ * Parameters:
+ *  f - The file descriptor for the GPX file to read.
+ *
+ * Return value:
+ *  NULL - unable to read in GPX or invalid GPX file.
+ *  valid pointer - a valid pointer to a newly allocated Activity instance.
+ *                  The caller is responsible for freeing the activity.
+ */
 Activity *gpx_read(FILE *f) {
   mxml_node_t *tree;
   State state = {NULL, false /* metadata */, true /* first_element */, {{0}}};
@@ -136,6 +180,19 @@ Activity *gpx_read(FILE *f) {
   return state.activity;
 }
 
+/**
+ * to_gpx_xml
+ *
+ * Description:
+ *  Deals with the MXML specific logic for writing a GPX file as XML.
+ *
+ * Parameters:
+ *  a - the `Activity` to convert into XML.
+ *
+ * Return value:
+ *  valid pointer - a pointer to the mxml_node_t root node for the xml.
+ *                  The caller is responsible for freeing this node.
+ */
 static mxml_node_t *to_gpx_xml(Activity *a) {
   char buf[TIME_BUFSIZ]; /* we don't need to zero since all the same length */
   unsigned i;
@@ -213,9 +270,24 @@ static mxml_node_t *to_gpx_xml(Activity *a) {
       }
     }
   }
+
   return xml;
 }
 
+/**
+ * gpx_write
+ *
+ * Description:
+ *  Write the `Activity` to `f` in GPX format.
+ *
+ * Parameters:
+ *  f - the file descriptor for the GPX file to write to.
+ *  a - the `Activity` to write.
+ *
+ * Return value:
+ *  0 - successfully wrote GPX file.
+ *  1 - unable to write GPX.
+ */
 int gpx_write(FILE *f, Activity *a) {
   mxml_node_t *tree;
 

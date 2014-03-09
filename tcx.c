@@ -37,6 +37,34 @@
 
 #include "tcx.h"
 
+/**
+ * tcx_read
+ *
+ * Description:
+ *  Read in the TCX file pointed to by `f` and return an `Activity`.
+ *
+ * Parameters:
+ *  f - The file descriptor for the TCX file to read.
+ *
+ * Return value:
+ *  NULL - unable to read in TCX or invalid TCX file.
+ *  valid pointer - a valid pointer to a newly allocated Activity instance.
+ *                  The caller is responsible for freeing the activity.
+ */
 Activity *tcx_read(FILE *f) { return NULL; }
 
+/**
+ * tcx_write
+ *
+ * Description:
+ *  Write the `Activity` to `f` in TCX format.
+ *
+ * Parameters:
+ *  f - the file descriptor for the TCX file to write to.
+ *  a - the `Activity` to write.
+ *
+ * Return value:
+ *  0 - successfully wrote TCX file.
+ *  1 - unable to write TCX.
+ */
 int tcx_write(FILE *f, Activity *activity) { return 1; }
