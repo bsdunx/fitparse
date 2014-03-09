@@ -37,39 +37,44 @@ typedef struct {
 } Options;
 
 static int version(void) {
-    printf("client: %s fitparse: %s", CLIENT_VERSION, FITPARSE_VERSION);
-    return 0;
+  printf("client: %s fitparse: %s", CLIENT_VERSION, FITPARSE_VERSION);
+  return 0;
 }
 
 static int usage(char *name) {
   fprintf(stderr,
-  "Usage: %s input -o output\n"
-  "       %s input-1 ... input-N --format=fit\n"
-  "       %s --format=gpx < input > output\n"
-  "\n", name, name, name);
+          "Usage: %s input -o output\n"
+          "       %s input-1 ... input-N --format=fit\n"
+          "       %s --format=gpx < input > output\n"
+          "\n",
+          name, name, name);
   fprintf(stderr,
-  "Options:\n"
-  "    -o, --output           the name of the output file, (default to 'stdout')\n"
-  "    -c, --config           the name of the config file to read in\n"
-  "    --format=<format>      the desired output format\n"
-  "    --{csv,fit,tcx,gpx}    shorthands for the output format\n");
+          "Options:\n"
+          "    -o, --output           the name of the output file, (default to "
+          "'stdout')\n"
+          "    -c, --config           the name of the config file to read in\n"
+          "    --format=<format>      the desired output format\n"
+          "    --{csv,fit,tcx,gpx}    shorthands for the output format\n");
+  fprintf(
+      stderr,
+      "    --hr=<bpm>             the HR max in BPM to use for summary data\n"
+      "    --gender=<m,f>         the gender to use for summary data\n"
+      "    --ftp=<watts>          the FTP in watts to use for summary data\n"
+      "    --units=<units>        the units to use for summary data (defaults "
+      "to 'metric')\n");
   fprintf(stderr,
-  "    --hr=<bpm>             the HR max in BPM to use for summary data\n"
-  "    --gender=<m,f>         the gender to use for summary data\n"
-  "    --ftp=<watts>          the FTP in watts to use for summary data\n"
-  "    --units=<units>        the units to use for summary data (defaults to 'metric')\n");
-  fprintf(stderr,
-  "    --merge                merge all the input files into output\n"
-  "    --split                TODO\n"
-  "    --crop                 TODO\n"
-  "    --fix=<type>           TODO\n"
-  "    --summary              print summary data for the input files\n"
-  "    --laps                 print lap summary data for the input files\n");
+          "    --merge                merge all the input files into output\n"
+          "    --split                TODO\n"
+          "    --crop                 TODO\n"
+          "    --fix=<type>           TODO\n"
+          "    --summary              print summary data for the input files\n"
+          "    --laps                 print lap summary data for the input "
+          "files\n");
   return 1;
 }
 
 static int validate_options(Options *options) {
-  (void) options;
+  (void)options;
   return 0;
 }
 
@@ -86,7 +91,7 @@ static int run(Options *options) {
   if (!(activities = malloc(sizeof(*activities) * (options->input_count || 1))))
     return 1;
 
-  if (!options->input_count) { /* no input files, read from stdin */
+  if (!options->input_count) {/* no input files, read from stdin */
     if (!(activities[0] = fitparse_read_file(stdin))) {
       fprintf(stderr, "Error reading from stdin\n");
       return 1;
@@ -102,7 +107,7 @@ static int run(Options *options) {
     }
   }
 
-  if (options->input_count > 1) { /* ignore output flags, just rename files */
+  if (options->input_count > 1) {/* ignore output flags, just rename files */
     for (i = 0; i < options->input_count; i++) {
       /* TODO rename change_extension crap */
       /*if (options->format) */
@@ -116,7 +121,7 @@ static int run(Options *options) {
       fitparse_write(options->output, activities[0]);
     }
     activity_destroy(activities[0]);
-  } else { /* no output file name, output to stdout */
+  } else {/* no output file name, output to stdout */
     fitparse_write_format_file(stdout, options->format, activities[0]);
     activity_destroy(activities[0]);
   }
@@ -131,32 +136,25 @@ int main(int argc, char *argv[]) {
   char *end;
 
   static struct option longopts[] = {
-    {"help", required_argument, NULL, 'h'},
-    {"version", required_argument, NULL, 'v'},
-
-    {"output", required_argument, NULL, 'o'},
-    {"config", required_argument, NULL, 'c'},
-
-    {"csv", no_argument, &options.format, CSV},
-    {"gpx", no_argument, &options.format, GPX},
-    {"tcx", no_argument, &options.format, TCX},
-    {"fit", no_argument, &options.format, FIT},
-
-    {"summary", no_argument, &options.summary, true},
-    {"laps", no_argument, &options.laps, true},
-
-    {"merge", no_argument, &options.merge, true},
-    {"split", required_argument, &options.split, true},
-    {"crop", required_argument, &options.crop, true},
-
-    {"format", required_argument, NULL, 0},
-    {"fix", required_argument, NULL, 0},
-
-    {"gender", required_argument, NULL, 0},
-    {"units", required_argument, NULL, 0},
-    {"hr", required_argument, NULL, 0},
-    {"ftp", required_argument, NULL, 0},
-  };
+      {"help", required_argument, NULL, 'h'},
+      {"version", required_argument, NULL, 'v'},
+      {"output", required_argument, NULL, 'o'},
+      {"config", required_argument, NULL, 'c'},
+      {"csv", no_argument, &options.format, CSV},
+      {"gpx", no_argument, &options.format, GPX},
+      {"tcx", no_argument, &options.format, TCX},
+      {"fit", no_argument, &options.format, FIT},
+      {"summary", no_argument, &options.summary, true},
+      {"laps", no_argument, &options.laps, true},
+      {"merge", no_argument, &options.merge, true},
+      {"split", required_argument, &options.split, true},
+      {"crop", required_argument, &options.crop, true},
+      {"format", required_argument, NULL, 0},
+      {"fix", required_argument, NULL, 0},
+      {"gender", required_argument, NULL, 0},
+      {"units", required_argument, NULL, 0},
+      {"hr", required_argument, NULL, 0},
+      {"ftp", required_argument, NULL, 0}, };
 
   while ((c = getopt_long(argc, argv, "vhoc", longopts, &longindex)) != -1) {
     switch (c) {
@@ -224,7 +222,7 @@ int main(int argc, char *argv[]) {
       destroy_options(&options);
       return 1;
     }
-    for (i= 0; optind < argc; optind++, i++) {
+    for (i = 0; optind < argc; optind++, i++) {
       options.input[i] = argv[optind];
     }
   }

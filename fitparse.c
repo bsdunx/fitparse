@@ -75,7 +75,6 @@ Activity *fitparse_read_format(char *filename, FileFormat format) {
 
 Activity *fitparse_read_format_file(FILE *f, FileFormat format) {
   return readers[format](f);
-
 }
 
 int fitparse_write(char *filename, Activity *a) {

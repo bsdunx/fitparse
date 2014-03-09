@@ -49,5 +49,11 @@
 /* should be in inih file format? */
 /* https://code.google.com/p/inih/ */
 
-typedef enum { Male, Female } Gender;
-typedef enum { Metric, Imperial } Units;
+typedef enum {
+  Male,
+  Female
+} Gender;
+typedef enum {
+  Metric,
+  Imperial
+} Units;
