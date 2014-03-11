@@ -41,8 +41,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "activity.h"
 #include "mxml.h"
+
+#include "activity.h"
 #include "util.h"
 
 /**

@@ -21,6 +21,14 @@ better HR, power model, etc
 document the code
 look into ReadTheDocs or ronn
 
+
+rolling averages data calculation:
+- takes 2n additional space:
+  - one array holds the 1,2,3,...n second average results
+  - other array is of pointers used for computation - starts with '1 second averages' = copy of the column vector
+      - A[i] = pointer to start of j second window including the point at
+  - next is the idea that the 5 second best comes from one of the 4 second windows plus one value on one of the sides
+
 CHECK:
 make sure units are all correct
 

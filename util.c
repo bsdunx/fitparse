@@ -20,9 +20,10 @@
 #include <time.h>
 #include <ctype.h>
 
+#include "date.h"
+
 #include "activity.h"
 #include "util.h"
-#include "date.h"
 
 /* Parse an ISO_8601 timestamp */
 uint32_t parse_timestamp(const char *date) {

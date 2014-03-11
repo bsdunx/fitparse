@@ -36,6 +36,7 @@
  *     51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#include <assert.h>
 #include <float.h>
 #include <math.h>
 #include <stdlib.h>
@@ -44,10 +45,10 @@
 #include "activity.h"
 #include "util.h"
 
+/* Standard growing factor for reallocation */
 #define alloc_nr(x) (((x) + 16) * 3 / 2)
 
-/*
- * Realloc the buffer pointed at by variable 'x' so that it can hold
+/* Realloc the buffer pointed at by variable 'x' so that it can hold
  * at least 'nr' entries; the number of entries currently allocated
  * is 'alloc', using the standard growing factor alloc_nr() macro.
  *
@@ -64,6 +65,15 @@
     }                                         \
   } while (0)
 
+/**
+ * init_summary
+ *
+ * Description:
+ *  Initializes the `Summary` object of the `Activity`.
+ *
+ * Parameters:
+ *  s - a pointer to the `Summary` data for the activity.
+ */
 static void init_summary(Summary *s) {
   DataField i;
   s->elapsed = s->moving = s->calories = s->ascent = s->descent = 0;
@@ -77,6 +87,17 @@ static void init_summary(Summary *s) {
   }
 }
 
+/**
+ * activity_new
+ *
+ * Description:
+ *  Instantiates a new `Activity` object. If a valid pointer is returned it
+ *  must be free'd with a call to `activity_destroy`.
+ *
+ * Return value:
+ *  NULL - unable to create a new `Activity` object.
+ *  valid pointer - the pointer to the `Activity`.
+ */
 Activity *activity_new(void) {
   Activity *a;
 
@@ -98,7 +119,19 @@ Activity *activity_new(void) {
   return a;
 }
 
+/**
+ * activity_destroy
+ *
+ * Description:
+ *  Destroys an `Activity` object that was created by `activity_new` and frees
+ *  all the associated memory.
+ *
+ * Parameters:
+ *  a - a non-NULL `Activity` pointer created by `activity_new`.
+ */
 void activity_destroy(Activity *a) {
+  assert(a != NULL);
+
   /* delete all data points */
   if (a->data_points) {
     free(a->data_points);
@@ -116,57 +149,84 @@ void activity_destroy(Activity *a) {
   a = NULL;
 }
 
-/* Derive distance from change in position */
-static void derive_distance_position(DataPoint *last, DataPoint *dp) {
+/**
+ * derive_distance_position
+ *
+ * Description:
+ *  Derive distance from change in position. Using the Haversine formula we are
+ *  able to infer distance travelled between two (lat,lon) points.
+ *
+ * Parameters:
+ *  prev - the previous `DataPoint` which has speed and distance paramters set.
+ *  dp - the `DataPoint` to potentially dervice speed or distance for.
+ */
+static void derive_distance_position(DataPoint *prev, DataPoint *dp) {
   double d_lat, d_lon, a, c, delta_d;
 
   if (!SET(dp->data[Distance]) &&
       (SET(dp->data[Latitude]) && SET(dp->data[Longitude]) &&
-       (SET(last->data[Latitude]) && SET(last->data[Longitude]))))
+       (SET(prev->data[Latitude]) && SET(prev->data[Longitude]))))
     return;
 
   /* Use the Haversine formula to calculate distance from lat and lon */
-  d_lat = to_radians(dp->data[Latitude] - last->data[Latitude]);
-  d_lon = to_radians(dp->data[Longitude] - last->data[Longitude]);
+  d_lat = to_radians(dp->data[Latitude] - prev->data[Latitude]);
+  d_lon = to_radians(dp->data[Longitude] - prev->data[Longitude]);
   a = sin(d_lat / 2) * sin(d_lat / 2) +
       cos(to_radians(dp->data[Latitude])) *
-          cos(to_radians(last->data[Latitude])) * sin(d_lon / 2) *
+          cos(to_radians(prev->data[Latitude])) * sin(d_lon / 2) *
           sin(d_lon / 2);
   c = 4 * atan2(sqrt(a), 1 + sqrt(1 - fabs(a)));
   delta_d = 6371 * c;
 
-  dp->data[Distance] = last->data[Distance] + delta_d;
+  dp->data[Distance] = prev->data[Distance] + delta_d;
 }
 
-/* Attempt to derive speed from distance or vice-versa */
-static void derive_speed_distance(DataPoint *last, DataPoint *dp) {
+/**
+ * derive_speed_distance
+ *
+ * Description:
+ *  Attempt to derive speed from distance or vice-versa. If we know one of the
+ *  values we can always computer the other.
+ *
+ * Parameters:
+ *  prev - the previous `DataPoint` which has speed and distance paramters set.
+ *  dp - the `DataPoint` to potentially dervice speed or distance for.
+ */
+static void derive_speed_distance(DataPoint *prev, DataPoint *dp) {
   double delta_t, delta_d;
 
-  /* return if distance and speed data is fine, or if last values are bad */
+  /* return if distance and speed data is fine, or if prev values are bad */
   if ((SET(dp->data[Speed]) && SET(dp->data[Distance])) ||
-      (SET(last->data[Timestamp]) && SET(last->data[Distance])))
+      (SET(prev->data[Timestamp]) && SET(prev->data[Distance])))
     return;
 
-  /* compute the elapsed time and distance traveled since the last recorded
+  /* compute the elapsed time and distance traveled since the prev recorded
    * trackpoint */
-  delta_t = dp->data[Timestamp] - last->data[Timestamp];
+  delta_t = dp->data[Timestamp] - prev->data[Timestamp];
 
   /* derive speed from distance */
   if (!SET(dp->data[Speed]) && !SET(dp->data[Distance])) {
 
-    delta_d = dp->data[Distance] - last->data[Distance];
+    delta_d = dp->data[Distance] - prev->data[Distance];
     if (delta_t > 0) dp->data[Speed] = delta_d / delta_t * SECS_IN_HOUR;
   } else if (SET(dp->data[Distance])) {
     /* otherwise derive distance from speed */
     delta_d = delta_t * dp->data[Speed] / SECS_IN_HOUR;
-    dp->data[Distance] = last->data[Distance] + delta_d;
+    dp->data[Distance] = prev->data[Distance] + delta_d;
   }
 }
 
-static inline bool moved(DataPoint *dp) {
-  return dp->data[Speed] > MOVING_SPEED;
-}
-
+/**
+ * recalc_summary
+ *
+ * Description:
+ *  Recompute the summary data for the `Activity` to account for the new
+ *  information in the `DataPoint`.
+ *
+ * Parameters:
+ *  a - the `Activity` to update.
+ *  dp - the newest `DataPoint` information to update the `Summary` with.
+ */
 static void recalc_summary(Activity *a, DataPoint *dp) {
   DataField i;
   DataPoint **last = a->last;
@@ -202,16 +262,31 @@ static void recalc_summary(Activity *a, DataPoint *dp) {
     }
   }
 
-  if (last[Timestamp] && SET(dp->data[Timestamp]) && moved(dp)) {
+  if (last[Timestamp] && SET(dp->data[Timestamp]) &&
+      (dp->data[SPEED] > MOVING_SPEED)) {
     a->summary.moving += dp->data[Timestamp] - last[Timestamp]->data[Timestamp];
   }
 }
 
-/* TODO make sure we infer missing values and do corrections */
-/* TODO see gpx parser for additional checks we must perform */
+/**
+ * activity_add_point
+ *
+ * Description:
+ *  Add a new `DataPoint` to the `Activity`. We assume the `DataPoint` is the
+ *  next point chronologically and correct any information that might be
+ *  missing or wrong within the point.
+ *
+ * Parameters:
+ *  a - the `Activity` to add the point to.
+ *  dp - the `DataPoint` to add.
+ *
+ * Return value:
+ *  0 - if the point was added successfully
+ *  1 - if there was an issue adding the `DataPoint`.
+ */
 int activity_add_point(Activity *a, DataPoint *dp) {
   DataField i;
-  DataPoint *last = NULL;
+  DataPoint *prev = NULL;
 
   if (!a->start_time && SET(dp->data[Timestamp])) {
     a->start_time = dp->data[Timestamp];
@@ -224,12 +299,12 @@ int activity_add_point(Activity *a, DataPoint *dp) {
 
   /* if this isn't the first time */
   if (a->num_points > 0) {
-    last = &(a->data_points[a->num_points - 1]);
+    prev = &(a->data_points[a->num_points - 1]);
     /* TODO - should we still run these functions to verify everything is
      * correct? */
     /* TODO set errors and correct if they are wrong? */
-    derive_distance_position(last, dp);
-    derive_speed_distance(last, dp);
+    derive_distance_position(prev, dp);
+    derive_speed_distance(prev, dp);
     /* HWM/garmin smart recording shit */
   }
 
@@ -247,7 +322,16 @@ int activity_add_point(Activity *a, DataPoint *dp) {
   return 0;
 }
 
-/* TODO */
+/**
+ * activity_add_lap
+ *
+ * Description:
+ *  TODO
+ *
+ * Parameters:
+ *
+ * Return value:
+ */
 int activity_add_lap(Activity *a, uint32_t lap) {
   if (a->laps) {
     /* see if theres enough space else realloc */
@@ -258,6 +342,20 @@ int activity_add_lap(Activity *a, uint32_t lap) {
   return 0;
 }
 
+/**
+ * activity_equal
+ *
+ * Description:
+ *  Determines whether two `Activity` objects are equivalent.
+ *
+ * Parameters:
+ *  a - the first `Activity`.
+ *  b - the second `Activity`.
+ *
+ * Return value:
+ *  true - if the `Activity` objects are equal
+ *  false - otherwise
+ */
 /* TODO */
 /* TODO double equals ? */
 bool activity_equal(Activity *a, Activity *b) {
