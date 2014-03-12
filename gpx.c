@@ -44,6 +44,7 @@
 #include "mxml.h"
 
 #include "activity.h"
+#include "gpx.h"
 #include "util.h"
 
 /**
@@ -170,14 +171,12 @@ Activity *gpx_read(FILE *f) {
   if (!(tree = mxmlSAXLoadFile(NULL, f, MXML_OPAQUE_CALLBACK, sax_cb,
                                (void *)&state))) {
     activity_destroy(state.activity);
-    fclose(f);
     return NULL;
   }
 
   state.activity->format = GPX;
 
   mxmlDelete(tree);
-  fclose(f);
   return state.activity;
 }
 
@@ -299,11 +298,9 @@ int gpx_write(FILE *f, Activity *a) {
 
   if (mxmlSaveFile(tree, f, MXML_NO_CALLBACK) < 0) {
     mxmlDelete(tree);
-    fclose(f);
     return 1;
   }
 
   mxmlDelete(tree);
-  fclose(f);
   return 0;
 }

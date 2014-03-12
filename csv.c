@@ -225,7 +225,6 @@ Activity *csv_read(FILE *f) {
   read_csv_data(f, data_fields, count, a);
   a->format = CSV;
 
-  fclose(f);
   return a;
 }
 
@@ -312,6 +311,5 @@ int csv_write_options(FILE *f, Activity *a, CSVOptions o) {
     fprintf(f, "\n");
   }
 
-  fclose(f);
   return 0;
 }
