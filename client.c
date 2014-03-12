@@ -91,7 +91,7 @@ static int run(Options *options) {
   if (!(activities = malloc(sizeof(*activities) * (options->input_count || 1))))
     return 1;
 
-  if (!options->input_count) {/* no input files, read from stdin */
+  if (!options->input_count) { /* no input files, read from stdin */
     if (!(activities[0] = fitparse_read_file(stdin))) {
       fprintf(stderr, "Error reading from stdin\n");
       return 1;
@@ -107,7 +107,7 @@ static int run(Options *options) {
     }
   }
 
-  if (options->input_count > 1) {/* ignore output flags, just rename files */
+  if (options->input_count > 1) { /* ignore output flags, just rename files */
     for (i = 0; i < options->input_count; i++) {
       /* TODO rename change_extension crap */
       /*if (options->format) */
@@ -121,7 +121,7 @@ static int run(Options *options) {
       fitparse_write(options->output, activities[0]);
     }
     activity_destroy(activities[0]);
-  } else {/* no output file name, output to stdout */
+  } else { /* no output file name, output to stdout */
     fitparse_write_format_file(stdout, options->format, activities[0]);
     activity_destroy(activities[0]);
   }

@@ -48,18 +48,9 @@
 #define SECS_IN_HOUR 3600
 #define MOVING_SPEED 0
 
-typedef enum {
-  false,
-  true
-} bool;
+typedef enum { false, true } bool;
 
-typedef enum {
-  CSV,
-  GPX,
-  TCX,
-  FIT,
-  UnknownFileFormat
-} FileFormat;
+typedef enum { CSV, GPX, TCX, FIT, UnknownFileFormat } FileFormat;
 
 typedef enum {
   Timestamp,

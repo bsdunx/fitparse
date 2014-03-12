@@ -21,6 +21,8 @@ better HR, power model, etc
 document the code
 look into ReadTheDocs or ronn
 
+### Compare write methods to how golden cheetah outputs files
+
 
 rolling averages data calculation:
 - takes 2n additional space:

@@ -83,7 +83,7 @@ static DataField name_to_field(char *name) {
   } else if (!strcmp(name, "temperature") || !strcmp(name, "atemp") ||
              !strcmp(name, "temp")) {
     return Temperature;
-  } else {/* not found */
+  } else { /* not found */
     return DataFieldCount;
   }
 }
