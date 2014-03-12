@@ -18,8 +18,11 @@ fitparse: client.o $(TARGET)
 	$(CC) $(CFLAGS) $^ -o $@
 
 $(TARGET): $(OBJECTS) $(LIBS)
-	ar rcs $@ $(OBJECTS)
-	libtool -static $@ $(LIBS) -o $@
+	-@rm -rf build
+	@mkdir build && cp $(LIBS) build
+	@cd build && ar x libmxml.a && ar x libdate.a
+	ar rcs $@ build/*.o $(OBJECTS)
+	-@rm -rf build
 
 test: $(OBJECTS) $(LIBS) $(HEADERS)
 	$(CC) $(CFLAGS) $(OBJECTS) $(LIBS) -o $@
@@ -49,7 +52,7 @@ clang:
 	-@scan-build -V -k -o `pwd`/clang $(MAKE) clean all
 
 clean:
-	rm -rf *.a *.o util tests/out test gpx clang/*
+	rm -rf *.a *.o util tests/out test gpx clang/* build
 	cd lib/mxml >/dev/null && git clean -f -d -x >/dev/null && git checkout -- mxml.xml >/dev/null
 	cd lib/date >/dev/null && git clean -f -d -x >/dev/null
 
