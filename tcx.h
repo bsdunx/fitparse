@@ -41,6 +41,6 @@
 #include "activity.h"
 
 Activity *tcx_read(FILE *f);
-int tcx_write(FILE *f, Activity *activity);
+int tcx_write(FILE *f, Activity *a);
 
 #endif /* _TCX_H_ */

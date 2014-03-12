@@ -89,11 +89,10 @@ int fitparse_write(char *filename, Activity *a) {
 
 int fitparse_write_format(char *filename, FileFormat format, Activity *a) {
   FILE *f;
-  Activity *a;
   if (!(f = fopen(filename, "w"))) return 1;
-  a = fitparse_write_format_file(f, format, a);
+  fitparse_write_format_file(f, format, a);
   fclose(f);
-  return a;
+  return 0;
 }
 
 int fitparse_write_format_file(FILE *f, FileFormat format, Activity *a) {

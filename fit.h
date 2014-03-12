@@ -40,6 +40,6 @@
 #include "activity.h"
 
 Activity *fit_read(FILE *f);
-int fit_write(FILE *f, Activity *activity);
+int fit_write(FILE *f, Activity *a);
 
 #endif /* _FIT_H_ */

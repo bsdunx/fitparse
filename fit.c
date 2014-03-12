@@ -66,4 +66,4 @@ Activity *fit_read(FILE *f) { return NULL; }
  *  0 - successfully wrote FIT file.
  *  1 - unable to write FIT.
  */
-int fit_write(FILE *f, Activity *activity) { return 1; }
+int fit_write(FILE *f, Activity *a) { return 1; }

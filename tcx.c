@@ -236,7 +236,7 @@ static mxml_node_t *to_tcx_xml(Activity *a) {
  *  0 - successfully wrote TCX file.
  *  1 - unable to write TCX.
  */
-int tcx_write(FILE *f, Activity *activity) {
+int tcx_write(FILE *f, Activity *a) {
   mxml_node_t *tree;
 
   assert(a != NULL);

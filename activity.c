@@ -263,7 +263,7 @@ static void recalc_summary(Activity *a, DataPoint *dp) {
   }
 
   if (last[Timestamp] && SET(dp->data[Timestamp]) &&
-      (dp->data[SPEED] > MOVING_SPEED)) {
+      (dp->data[Speed] > MOVING_SPEED)) {
     a->summary.moving += dp->data[Timestamp] - last[Timestamp]->data[Timestamp];
   }
 }
