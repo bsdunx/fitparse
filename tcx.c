@@ -193,27 +193,27 @@ Activity *tcx_read(FILE *f) {
 static mxml_node_t *to_tcx_xml(Activity *a) {
   char buf[TIME_BUFSIZ]; /* we don't need to zero since all the same length */
   unsigned i;
-  mxml_node_t *xml, *trainingCenterDatabase;
+  mxml_node_t *xml, *tcx;
 
   xml = mxmlNewXML("1.0");
 
   /* create tcx root */
-  trainingCenterDatabase = mxmlNewElement(xml, "TrainingCenterDatabase");
+  tcx = mxmlNewElement(xml, "TrainingCenterDatabase");
   mxmlElementSetAttr(
-      trainingCenterDatabase, "xmlns",
+      tcx, "xmlns",
       "http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2");
-  mxmlElementSetAttr(trainingCenterDatabase, "xmlns:ns2",
+  mxmlElementSetAttr(tcx, "xmlns:ns2",
                      "http://www.garmin.com/xmlschemas/UserProfile/v2");
-  mxmlElementSetAttr(trainingCenterDatabase, "xmlns:ns3",
+  mxmlElementSetAttr(tcx, "xmlns:ns3",
                      "http://www.garmin.com/xmlschemas/ActivityExtension/v2");
-  mxmlElementSetAttr(trainingCenterDatabase, "xmlns:ns4",
+  mxmlElementSetAttr(tcx, "xmlns:ns4",
                      "http://www.garmin.com/xmlschemas/ProfileExtension/v1");
-  mxmlElementSetAttr(trainingCenterDatabase, "xmlns:ns5",
+  mxmlElementSetAttr(tcx, "xmlns:ns5",
                      "http://www.garmin.com/xmlschemas/ActivityGoals/v1");
-  mxmlElementSetAttr(trainingCenterDatabase, "xmlns:xsi",
+  mxmlElementSetAttr(tcx, "xmlns:xsi",
                      "http://www.w3.org/2001/XMLSchema-instance");
   mxmlElementSetAttr(
-      trainingCenterDatabase, "xsi:schemaLocation",
+      tcx, "xsi:schemaLocation",
       "http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2 "
       "http://www.garmin.com/xmlschemas/TrainingCenterDatabasev2.xsd");
 
