@@ -15,7 +15,7 @@ default: $(TARGET)
 all: $(TARGET) fitparse test
 
 fitparse: client.o $(TARGET)
-	$(CC) $(CFLAGS) $^ -o $@
+	$(CC) $(CFLAGS) $^ -o $@ -lm
 
 $(TARGET): $(OBJECTS) $(LIBS)
 	-@rm -rf build
