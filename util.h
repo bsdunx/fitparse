@@ -24,6 +24,8 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include "activity.h"
+
 #define PI (3.141592653589793)
 #define TIME_BUFSIZ 21
 
@@ -38,7 +40,7 @@ static inline int doubles_equal(double a, double b) {
 
 static inline char *extension(char *filename) {
   char *s = strrchr(filename, '.');
-  return s ? s + 1 : s;
+  return s ? s + 1 : "";
 }
 
 static inline char *downcase(char *str) {

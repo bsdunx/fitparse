@@ -87,13 +87,13 @@ static void destroy_options(Options *options) {
 static int run(Options *options) {
   unsigned i, j;
   Activity **activities;
+  Activity *a;
 
   if (!(activities = malloc(sizeof(*activities) * (options->input_count || 1))))
     return 1;
 
   if (!options->input_count) { /* no input files, read from stdin */
     if (!(activities[0] = fitparse_read_file(stdin))) {
-      fprintf(stderr, "Error reading from stdin\n");
       return 1;
     }
     options->input_count = 1;
@@ -154,9 +154,10 @@ int main(int argc, char *argv[]) {
       {"gender", required_argument, NULL, 0},
       {"units", required_argument, NULL, 0},
       {"hr", required_argument, NULL, 0},
-      {"ftp", required_argument, NULL, 0}, };
+      {"ftp", required_argument, NULL, 0},
+      {0, 0, 0, 0}};
 
-  while ((c = getopt_long(argc, argv, "vhoc", longopts, &longindex)) != -1) {
+  while ((c = getopt_long(argc, argv, "vho:c:", longopts, &longindex)) != -1) {
     switch (c) {
       case 0:
         if (!strcmp("format", longopts[longindex].name)) {
@@ -227,7 +228,8 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  if (!validate_options(&options)) {
+  if (validate_options(&options)) {
+    fprintf(stderr, "TODO\n");
     goto usage;
   }
 

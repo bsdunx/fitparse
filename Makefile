@@ -24,8 +24,8 @@ $(TARGET): $(OBJECTS) $(LIBS)
 	ar rcs $@ build/*.o $(OBJECTS)
 	-@rm -rf build
 
-test: $(OBJECTS) $(LIBS) $(HEADERS)
-	$(CC) $(CFLAGS) $(OBJECTS) $(LIBS) -o $@
+test: test.o $(OBJECTS) $(LIBS) $(HEADERS)
+	$(CC) $(CFLAGS) $^ -o $@ -lm
 	mkdir -p tests/out
 
 test.o: test.c $(HEADERS)

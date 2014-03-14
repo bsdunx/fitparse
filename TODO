@@ -1,5 +1,8 @@
 fitparse segfaults on getopts loop
 
+****
+SOLVE LIBRARY MESS
+*****
 
 * gpx write - mostly done, modulo laps and metadata time
 * fix Makefile
