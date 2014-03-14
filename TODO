@@ -1,3 +1,6 @@
+fitparse segfaults on getopts loop
+
+
 * gpx write - mostly done, modulo laps and metadata time
 * fix Makefile
 
@@ -33,4 +36,3 @@ rolling averages data calculation:
 
 CHECK:
 make sure units are all correct
-
