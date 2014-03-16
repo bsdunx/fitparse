@@ -41,7 +41,43 @@
 
 #include "activity.h"
 
+#define DEFAULT_GPX_OPTIONS { true, false }
+
+/**
+ * GPXOptions
+ *
+ * Description:
+ *  Structure use to specify options for how the GPX should be written.
+ *
+ * Fields:
+ *  add_laps - whether or not to add laps as 'wpt' fields.
+ *  lap_trksegs - whether to write a trkseg for each lap.
+ */
+typedef struct {
+  bool add_laps;
+  bool lap_trksegs;
+} GPXOptions;
+
 Activity *gpx_read(FILE *f);
-int gpx_write(FILE *f, Activity *a);
+int gpx_write_options(FILE *f, Activity *a, GPXOptions *o);
+
+/**
+ * gpx_write
+ *
+ * Description:
+ *  Write the `Activity` to `f` in GPX format.
+ *
+ * Parameters:
+ *  f - the file descriptor for the GPX file to write to.
+ *  a - the `Activity` to write.
+ *
+ * Return value:
+ *  0 - successfully wrote GPX file.
+ *  1 - unable to write GPX.
+ */
+static inline int gpx_write(FILE *f, Activity *a) {
+  GPXOptions o = DEFAULT_GPX_OPTIONS;
+  return gpx_write(f, a, &o);;
+}
 
 #endif /* _GPX_H_ */

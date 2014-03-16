@@ -245,9 +245,9 @@ Activity *csv_read(FILE *f) {
  *          written field of a given `DataPoint`.
  */
 static void write_field(FILE *f, const char *format, size_t i, DataField field,
-                        Activity *a, CSVOptions o, bool *first) {
+                        Activity *a, CSVOptions *o, bool *first) {
   double d = a->data_points[i].data[field];
-  if (!o.remove_unset || a->last[field]) {
+  if (!o->remove_unset || a->last[field]) {
     if (!*first) {
       fprintf(f, ",");
     }
@@ -269,13 +269,13 @@ static void write_field(FILE *f, const char *format, size_t i, DataField field,
  * Parameters:
  *  f - the file descriptor for the CSV file to write to.
  *  a - the `Activity` to write.
- *  o - the options to use when printing the `Activity`.
+ *  o - the options to use when writing the `Activity`.
  *
  * Return value:
  *  0 - successfully wrote CSV file.
  *  1 - unable to write CSV.
  */
-int csv_write_options(FILE *f, Activity *a, CSVOptions o) {
+int csv_write_options(FILE *f, Activity *a, CSVOptions *o) {
   unsigned i;
   bool first = true;
 

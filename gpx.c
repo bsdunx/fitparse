@@ -58,12 +58,19 @@
  *  metadata - whether or not we are currently inside the <metadata> tag.
  *  first_element - whether we have seen the first element yet.
  *  dp - the current datapoint which we are building up to add to `Activity`.
+ *  laps - the timestamps for each of the laps read.
+ *  TODO
  */
 typedef struct {
   Activity *activity;
   bool metadata;
   bool first_element;
   DataPoint dp;
+  /* TODO */
+  bool wpt;
+  bool trkseg;
+  Vector laps;
+  Vector trksegs;
 } State;
 
 /**
@@ -104,6 +111,10 @@ static int sax_cb(mxml_node_t *node, mxml_sax_event_t event, void *sax_data) {
 
     if (!strcmp(name, "metadata")) {
       state->metadata = true;
+    } else if (!strcmp(name, "wpt")) {
+      state->wpt = true;
+    } else if (!strcmp(name, "trkseg")) {
+      state->trkseg = true;
     } else if (!strcmp(name, "trkpt")) {
       attr = mxmlElementGetAttr(node, "lat");
       if (attr) {
@@ -123,8 +134,16 @@ static int sax_cb(mxml_node_t *node, mxml_sax_event_t event, void *sax_data) {
       state->metadata = false;
     } else if (state->metadata) {
       return 0;
+    } else if (!strcmp(name, "wpt")) {
+      state->wpt = false;
     } else if (!strcmp(name, "time")) {
-      parse_field(Timestamp, &(state->dp), data);
+      if (state->wpt) {
+        return vector_add(&(state->laps), (uint32_t)parse_timestamp(data));
+      } else {
+        parse_field(Timestamp, &(state->dp), data);
+          return vector_add(&(state->trksegs), (uint32_t)state->dp[Timestamp]);
+        }
+      }
     } else if (!strcmp(name, "ele")) {
       parse_field(Altitude, &(state->dp), data);
     } else if (!strcmp(name, "gpxdata:hr") || !strcmp(name, "gpxtpx:hr")) {
@@ -137,7 +156,13 @@ static int sax_cb(mxml_node_t *node, mxml_sax_event_t event, void *sax_data) {
     } else if (!strcmp(name, "gpxdata:bikepower")) {
       parse_field(Power, &(state->dp), data);
     } else if (!strcmp(name, "trkpt")) {
-      activity_add_point(state->activity, &(state->dp));
+      if (activity_add_point(state->activity, &(state->dp))) {
+        return 1;
+      }
+      if (state->trkseg) {
+        vector_add(&(state->trksegs), (uint32_t)state->activity->num_points - 1);
+        state->trkseg = false;
+      }
       unset_data_point(&(state->dp));
     }
   } else if (event == MXML_SAX_DATA) {
@@ -163,19 +188,30 @@ static int sax_cb(mxml_node_t *node, mxml_sax_event_t event, void *sax_data) {
  */
 Activity *gpx_read(FILE *f) {
   mxml_node_t *tree;
-  State state = {NULL, false /* metadata */, true /* first_element */, {{0}}};
+  State state = {
+    NULL, /* activity */
+    false, /* metadata */
+    true, /* first_element */
+    {{0}}, /* dp */
+    false, /* wpt */
+    false, /* trkseg */
+    NULL, /* laps */
+    NULL /* trksegs */
+  }
   unset_data_point(&(state.dp));
 
   if (!(state.activity = activity_new())) return NULL;
 
   if (!(tree = mxmlSAXLoadFile(NULL, f, MXML_OPAQUE_CALLBACK, sax_cb,
                                (void *)&state))) {
+    if (state->laps) free(state->laps);
     activity_destroy(state.activity);
     return NULL;
   }
 
   state.activity->format = GPX;
 
+  if (state->laps) free(state->laps);
   mxmlDelete(tree);
   return state.activity;
 }
@@ -188,16 +224,17 @@ Activity *gpx_read(FILE *f) {
  *
  * Parameters:
  *  a - the `Activity` to convert into XML.
+ *  o - the options to use when writing the `Activity`.
  *
  * Return value:
  *  valid pointer - a pointer to the mxml_node_t root node for the xml.
  *                  The caller is responsible for freeing this node.
  */
-static mxml_node_t *to_gpx_xml(Activity *a) {
+static mxml_node_t *to_gpx_xml(Activity *a, GPXOptions *o) {
   char buf[TIME_BUFSIZ]; /* we don't need to zero since all the same length */
-  unsigned i;
-  mxml_node_t *xml, *gpx, *metadata, *trk, *time, *name, *trkseg, *trkpt, *ele,
-      *extensions, *gpxtpx, *atemp, *hr, *cad;
+  mxml_node_t *xml, *gpx, *metadata, *wpt, *trk, *time, *name, *trkseg, *trkpt, *ele, *extensions, *gpxtpx, *atemp, *hr, *cad;
+  unsigned i, lap_count = 0;
+  uint32_t lap;
 
   xml = mxmlNewXML("1.0");
 
@@ -227,14 +264,45 @@ static mxml_node_t *to_gpx_xml(Activity *a) {
   format_timestamp(buf, a->start_time);
   mxmlNewText(time, 0, buf);
 
-  /* TODO lap waypoints?  or lap as metadata? */
+  /* write laps as waypoints */
+  if (o->add_laps) {
+    for (i = 0; i < a->laps->size; i++) {
+      lap = a->laps->data[i];
+      wpt = mxmlNewElement(gpx, "wpt");
+      mxmlElementSetAttrf(wpt, "lat", "%.7f",
+          a->data_points[lap].data[Latitude]);
+      mxmlElementSetAttrf(wpt, "lon", "%.7f",
+          a->data_points[lap].data[Longitude]);
 
+      time = mxmlNewElement(wpt, "time");
+      format_timestamp(buf, a->data_points[i].data[Timestamp]);
+      mxmlNewText(time, 0, buf);
+
+      name = mxmlNewElement(wpt, "name");
+      mxmlNewTextf(name, 0, "Lap %d", i);
+    }
+  }
+
+  /* write trk element */
   trk = mxmlNewElement(gpx, "trk");
   name = mxmlNewElement(trk, "name");
   mxmlNewText(name, 0, "Untitled");
 
-  trkseg = mxmlNewElement(trk, "trkseg");
+  // TODO we also need to add just normal trkegs...
+  if (!(o->add_laps && o->lap_trksegs)) {
+    trkseg = mxmlNewElement(trk, "trkseg");
+  } else {
+    lap = 0;
+  }
+
   for (i = 0; i < a->num_points; i++) {
+    if ((o->add_laps && o->lap_trksegs) &&
+        lap_count < a->laps->size &&
+        lap == i) {
+      trkseg = mxmlNewElement(trk, "trkseg");
+      lap = a->laps->data[++lap_count];
+    }
+
     trkpt = mxmlNewElement(trkseg, "trkpt");
     mxmlElementSetAttrf(trkpt, "lat", "%.7f", a->data_points[i].data[Latitude]);
     mxmlElementSetAttrf(trkpt, "lon", "%.7f",
@@ -275,26 +343,27 @@ static mxml_node_t *to_gpx_xml(Activity *a) {
 }
 
 /**
- * gpx_write
+ * gpx_write_options
  *
  * Description:
- *  Write the `Activity` to `f` in GPX format.
+ *  Write the `Activity` to `f` in GPX format with optional lap data.
  *
  * Parameters:
  *  f - the file descriptor for the GPX file to write to.
  *  a - the `Activity` to write.
+ *  o - the options to use when writing the `Activity`.
  *
  * Return value:
  *  0 - successfully wrote GPX file.
  *  1 - unable to write GPX.
  */
-int gpx_write(FILE *f, Activity *a) {
+int gpx_write_options(FILE *f, Activity *a, GPXOptions *o) {
   mxml_node_t *tree;
 
   assert(a != NULL);
 
   if (!a->last[Latitude] && !a->last[Longitude]) return 1;
-  if (!(tree = to_gpx_xml(a))) return 1;
+  if (!(tree = to_gpx_xml(a, o))) return 1;
 
   if (mxmlSaveFile(tree, f, MXML_NO_CALLBACK) < 0) {
     mxmlDelete(tree);

@@ -4,6 +4,16 @@ fitparse segfaults on getopts loop
 SOLVE LIBRARY MESS
 *****
 
+
+OPTIONS:
+
+laps: add, don't add (gpx)
+non-contiguous: fill, ignore, seperate (trkseg)
+
+
+
+
+
 * gpx write - mostly done, modulo laps and metadata time
 * fix Makefile
 

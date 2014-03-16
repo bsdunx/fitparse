@@ -43,7 +43,7 @@ typedef struct {
 } CSVOptions;
 
 Activity *csv_read(FILE *f);
-int csv_write_options(FILE *f, Activity *a, CSVOptions o);
+int csv_write_options(FILE *f, Activity *a, CSVOptions *o);
 
 /**
  * csv_write
@@ -61,8 +61,8 @@ int csv_write_options(FILE *f, Activity *a, CSVOptions o);
  *  1 - unable to write CSV.
  */
 static inline int csv_write(FILE *f, Activity *a) {
-  CSVOptions options = DEFAULT_CSV_OPTIONS;
-  return csv_write_options(f, a, options);
+  CSVOptions &options = DEFAULT_CSV_OPTIONS;
+  return csv_write_options(f, a, &o);
 }
 
 #endif /* _CSV_H_ */
