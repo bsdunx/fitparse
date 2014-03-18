@@ -11,6 +11,12 @@ laps: add, don't add (gpx)
 non-contiguous: fill, ignore, seperate (trkseg)
 
 
+*****
+unset data point (last) should be an IndexVector just like in gps? or not, since fixed size. just still at least be indices
+call trksegs breaks or splits
+
+
+
 
 
 
