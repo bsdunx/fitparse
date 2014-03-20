@@ -157,9 +157,10 @@ typedef struct {
   Sport sport;
   FileFormat format; /* the original format it was read in from */
   uint32_t start_time;
-  uint32_t *laps; /* TODO array of timestamps, always at least one */
+  Vector *laps;
+  Vector *breaks;
   DataPoint *data_points;
-  DataPoint *last[DataFieldCount];
+  DataPoint *last_set[DataFieldCount];
   Summary summary;
   size_t num_points;
   size_t points_alloc;

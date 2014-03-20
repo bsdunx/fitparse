@@ -88,12 +88,13 @@ Activity *activity_new(void) {
   a->sport = UnknownSport;
   a->format = UnknownFileFormat;
   a->start_time = 0;
-  a->laps = NULL; /* TODO */
+  a->laps = NULL;
+  a->breaks = NULL;
   a->data_points = NULL;
   a->num_points = 0;
 
   memset(a->errors, 0, sizeof(*(a->errors)));
-  memset(a->last, 0, sizeof(*(a->last)));
+  memset(a->last_set, 0, sizeof(*(a->last_set)));
   init_summary(&(a->summary));
 
   return a;
@@ -119,11 +120,9 @@ void activity_destroy(Activity *a) {
     a->num_points = 0;
   }
 
-  /* delete all laps */
-  if (a->laps) {
-    free(a->laps);
-    a->laps = NULL;
-  }
+  /* delete all laps and breaks */
+  if (a->laps) vector_destroy(laps);
+  if (a->breaks) vector_destroy(breaks);
 
   free(a);
   a = NULL;
@@ -209,7 +208,7 @@ static void derive_speed_distance(DataPoint *prev, DataPoint *dp) {
  */
 static void recalc_summary(Activity *a, DataPoint *dp) {
   DataField i;
-  DataPoint **last = a->last;
+  DataPoint **last_set = a->last_set;
   double d_alt;
 
   for (i = 0; i < DataFieldCount; i++) {
@@ -233,8 +232,8 @@ static void recalc_summary(Activity *a, DataPoint *dp) {
 
   /* TODO calories */
 
-  if (last[Altitude] && SET(dp->data[Altitude])) {
-    d_alt = dp->data[Altitude] - last[Altitude]->data[Altitude];
+  if (last_set[Altitude] && SET(dp->data[Altitude])) {
+    d_alt = dp->data[Altitude] - last_set[Altitude]->data[Altitude];
     if (d_alt > 0) {
       a->summary.ascent += d_alt;
     } else {
@@ -242,9 +241,9 @@ static void recalc_summary(Activity *a, DataPoint *dp) {
     }
   }
 
-  if (last[Timestamp] && SET(dp->data[Timestamp]) &&
+  if (last_set[Timestamp] && SET(dp->data[Timestamp]) &&
       (dp->data[Speed] > MOVING_SPEED)) {
-    a->summary.moving += dp->data[Timestamp] - last[Timestamp]->data[Timestamp];
+    a->summary.moving += dp->data[Timestamp] - last_set[Timestamp]->data[Timestamp];
   }
 }
 
@@ -286,6 +285,8 @@ int activity_add_point(Activity *a, DataPoint *dp) {
     derive_distance_position(prev, dp);
     derive_speed_distance(prev, dp);
     /* HWM/garmin smart recording shit */
+  } else {
+    /* TODO add lap? should ensure always at least start lap? */
   }
 
   /* TODO eventually move to a lap based system */
@@ -294,31 +295,11 @@ int activity_add_point(Activity *a, DataPoint *dp) {
   for (i = 0; i < DataFieldCount; i++) {
     a->data_points[a->num_points].data[i] = dp->data[i];
     if (SET(dp->data[i])) {
-      a->last[i] = &(a->data_points[a->num_points]);
+      a->last_set[i] = &(a->data_points[a->num_points]);
     }
   }
 
   a->num_points++;
-  return 0;
-}
-
-/**
- * activity_add_lap
- *
- * Description:
- *  TODO
- *
- * Parameters:
- *
- * Return value:
- */
-int activity_add_lap(Activity *a, uint32_t lap) {
-  if (a->laps) {
-    /* see if theres enough space else realloc */
-  } else {
-    /* alloc a certain amount of space */
-  }
-  /* add activity->laps[next] = lap; */
   return 0;
 }
 
@@ -350,9 +331,11 @@ bool activity_equal(Activity *a, Activity *b) {
     return false;
 
   for (i = 0; i < DataFieldCount; i++) {
-    if ((a->last[i] && !b->last[i]) || (!a->last[i] && b->last[i]))
+    if ((a->last_set[i] && !b->last_set[i]) || (!a->last_set[i] && b->last_set[i]))
       return false;
   }
+
+  /* TODO laps and breaks? */
 
   for (i = 0; i < a->num_points; i++) {
     for (j = 0; j < DataFieldCount; j++) {

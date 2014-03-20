@@ -69,8 +69,10 @@ typedef struct {
   /* TODO */
   bool wpt;
   bool trkseg;
+  Vector lap_times;
   Vector laps;
   Vector trksegs;
+  size_t lap_num;
 } State;
 
 /**
@@ -138,7 +140,7 @@ static int sax_cb(mxml_node_t *node, mxml_sax_event_t event, void *sax_data) {
       state->wpt = false;
     } else if (!strcmp(name, "time")) {
       if (state->wpt) {
-        return vector_add(&(state->laps), (uint32_t)parse_timestamp(data));
+        return vector_add(&(state->lap_times), (uint32_t)parse_timestamp(data));
       } else {
         parse_field(Timestamp, &(state->dp), data);
           return vector_add(&(state->trksegs), (uint32_t)state->dp[Timestamp]);
@@ -159,6 +161,8 @@ static int sax_cb(mxml_node_t *node, mxml_sax_event_t event, void *sax_data) {
       if (activity_add_point(state->activity, &(state->dp))) {
         return 1;
       }
+      if (state->dp[Timestamp] == state->lap
+
       if (state->trkseg) {
         vector_add(&(state->trksegs), (uint32_t)state->activity->num_points - 1);
         state->trkseg = false;
@@ -170,6 +174,15 @@ static int sax_cb(mxml_node_t *node, mxml_sax_event_t event, void *sax_data) {
   }
 
   return 0;
+}
+
+static void fix_laps(State *s) {
+}
+
+static void clear_state(State *s) {
+  if (state->laps) vector_destroy(&(state->laps));
+  if (state->lap_times) vector_destroy(&(state->lap_times));
+  if (state->trksegs) vector_destroy(&(state->trksegs));
 }
 
 /**
@@ -196,7 +209,9 @@ Activity *gpx_read(FILE *f) {
     false, /* wpt */
     false, /* trkseg */
     NULL, /* laps */
-    NULL /* trksegs */
+    NULL, /* lap_times */
+    NULL, /* trksegs */
+    0 /* lap_num */
   }
   unset_data_point(&(state.dp));
 
@@ -204,14 +219,21 @@ Activity *gpx_read(FILE *f) {
 
   if (!(tree = mxmlSAXLoadFile(NULL, f, MXML_OPAQUE_CALLBACK, sax_cb,
                                (void *)&state))) {
-    if (state->laps) free(state->laps);
+    clear_state(&state);
     activity_destroy(state.activity);
     return NULL;
   }
 
   state.activity->format = GPX;
 
-  if (state->laps) free(state->laps);
+  if (state.laps) {
+    /* Laps we have are timestamps instead of indices and could be end times */
+    fix_laps(&state);
+    activity_add_laps(&(state.laps))
+  }
+  if (state.trksegs) activity_add_breaks(&(state.trksegs))
+
+  clear_state(&state);
   mxmlDelete(tree);
   return state.activity;
 }
