@@ -143,40 +143,55 @@ static int sax_cb(mxml_node_t *node, mxml_sax_event_t event, void *sax_data) {
         return vector_add(&(state->lap_times), (uint32_t)parse_timestamp(data));
       } else {
         parse_field(Timestamp, &(state->dp), data);
-          return vector_add(&(state->trksegs), (uint32_t)state->dp[Timestamp]);
-        }
+        return vector_add(&(state->trksegs), (uint32_t)state->dp[Timestamp]);
       }
-    } else if (!strcmp(name, "ele")) {
-      parse_field(Altitude, &(state->dp), data);
-    } else if (!strcmp(name, "gpxdata:hr") || !strcmp(name, "gpxtpx:hr")) {
-      parse_field(HeartRate, &(state->dp), data);
-    } else if (!strcmp(name, "gpxdata:temp") || !strcmp(name, "gpxtpx:atemp")) {
-      parse_field(Temperature, &(state->dp), data);
-    } else if (!strcmp(name, "gpxdata:cadence") ||
-               !strcmp(name, "gpxtpx:cad")) {
-      parse_field(Cadence, &(state->dp), data);
-    } else if (!strcmp(name, "gpxdata:bikepower")) {
-      parse_field(Power, &(state->dp), data);
-    } else if (!strcmp(name, "trkpt")) {
-      if (activity_add_point(state->activity, &(state->dp))) {
-        return 1;
-      }
-      if (state->dp[Timestamp] == state->lap
-
-      if (state->trkseg) {
-        vector_add(&(state->trksegs), (uint32_t)state->activity->num_points - 1);
-        state->trkseg = false;
-      }
-      unset_data_point(&(state->dp));
     }
-  } else if (event == MXML_SAX_DATA) {
-    mxmlRetain(node);
+  } else if (!strcmp(name, "ele")) {
+    parse_field(Altitude, &(state->dp), data);
+  } else if (!strcmp(name, "gpxdata:hr") || !strcmp(name, "gpxtpx:hr")) {
+    parse_field(HeartRate, &(state->dp), data);
+  } else if (!strcmp(name, "gpxdata:temp") || !strcmp(name, "gpxtpx:atemp")) {
+    parse_field(Temperature, &(state->dp), data);
+  } else if (!strcmp(name, "gpxdata:cadence") || !strcmp(name, "gpxtpx:cad")) {
+    parse_field(Cadence, &(state->dp), data);
+  } else if (!strcmp(name, "gpxdata:bikepower")) {
+    parse_field(Power, &(state->dp), data);
+  } else if (!strcmp(name, "trkpt")) {
+    if (activity_add_point(state->activity, &(state->dp))) {
+      return 1;
+    }
+    if (state->dp[Timestamp] == state->lap_times[state->lap_num]) {
+      vector_add(state->laps, (uint32_t)state->activity->num_points - 1);
+      state->lap_num++;
+    }
+    if (state->trkseg) {
+      vector_add(&(state->trksegs), (uint32_t)state->activity->num_points - 1);
+      state->trkseg = false;
+    }
+    unset_data_point(&(state->dp));
   }
+}
+else if (event == MXML_SAX_DATA) {
+  mxmlRetain(node);
+}
 
-  return 0;
+return 0;
 }
 
 static void fix_laps(State *s) {
+  size_t i, state;
+
+  /* If there are no laps, add the default starting lap */
+  if (!state->laps && state->activity->num_points) {
+    vector_add(state->laps, 1);
+    return;
+  }
+
+  /* If there is only one lap it is the starting lap */
+
+  /* TODO */
+  if (state->laps->size > 1 && state->trksegs > 1) {
+  }
 }
 
 static void clear_state(State *s) {
@@ -202,18 +217,17 @@ static void clear_state(State *s) {
 Activity *gpx_read(FILE *f) {
   mxml_node_t *tree;
   State state = {
-    NULL, /* activity */
+    NULL,  /* activity */
     false, /* metadata */
-    true, /* first_element */
+    true,  /* first_element */
     {{0}}, /* dp */
     false, /* wpt */
     false, /* trkseg */
-    NULL, /* laps */
-    NULL, /* lap_times */
-    NULL, /* trksegs */
-    0 /* lap_num */
-  }
-  unset_data_point(&(state.dp));
+    NULL,  /* laps */
+    NULL,  /* lap_times */
+    NULL,  /* trksegs */
+    0      /* lap_num */
+  } unset_data_point(&(state.dp));
 
   if (!(state.activity = activity_new())) return NULL;
 
@@ -254,7 +268,8 @@ Activity *gpx_read(FILE *f) {
  */
 static mxml_node_t *to_gpx_xml(Activity *a, GPXOptions *o) {
   char buf[TIME_BUFSIZ]; /* we don't need to zero since all the same length */
-  mxml_node_t *xml, *gpx, *metadata, *wpt, *trk, *time, *name, *trkseg, *trkpt, *ele, *extensions, *gpxtpx, *atemp, *hr, *cad;
+  mxml_node_t *xml, *gpx, *metadata, *wpt, *trk, *time, *name, *trkseg, *trkpt,
+      *ele, *extensions, *gpxtpx, *atemp, *hr, *cad;
   unsigned i, lap_count = 0;
   uint32_t lap;
 
@@ -292,9 +307,9 @@ static mxml_node_t *to_gpx_xml(Activity *a, GPXOptions *o) {
       lap = a->laps->data[i];
       wpt = mxmlNewElement(gpx, "wpt");
       mxmlElementSetAttrf(wpt, "lat", "%.7f",
-          a->data_points[lap].data[Latitude]);
+                          a->data_points[lap].data[Latitude]);
       mxmlElementSetAttrf(wpt, "lon", "%.7f",
-          a->data_points[lap].data[Longitude]);
+                          a->data_points[lap].data[Longitude]);
 
       time = mxmlNewElement(wpt, "time");
       format_timestamp(buf, a->data_points[i].data[Timestamp]);
@@ -318,8 +333,7 @@ static mxml_node_t *to_gpx_xml(Activity *a, GPXOptions *o) {
   }
 
   for (i = 0; i < a->num_points; i++) {
-    if ((o->add_laps && o->lap_trksegs) &&
-        lap_count < a->laps->size &&
+    if ((o->add_laps && o->lap_trksegs) && lap_count < a->laps->size &&
         lap == i) {
       trkseg = mxmlNewElement(trk, "trkseg");
       lap = a->laps->data[++lap_count];

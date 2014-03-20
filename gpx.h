@@ -41,7 +41,8 @@
 
 #include "activity.h"
 
-#define DEFAULT_GPX_OPTIONS { true, false }
+#define DEFAULT_GPX_OPTIONS \
+  { true, false }
 
 /**
  * GPXOptions
@@ -77,7 +78,8 @@ int gpx_write_options(FILE *f, Activity *a, GPXOptions *o);
  */
 static inline int gpx_write(FILE *f, Activity *a) {
   GPXOptions o = DEFAULT_GPX_OPTIONS;
-  return gpx_write(f, a, &o);;
+  return gpx_write(f, a, &o);
+  ;
 }
 
 #endif /* _GPX_H_ */

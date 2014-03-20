@@ -243,7 +243,8 @@ static void recalc_summary(Activity *a, DataPoint *dp) {
 
   if (last_set[Timestamp] && SET(dp->data[Timestamp]) &&
       (dp->data[Speed] > MOVING_SPEED)) {
-    a->summary.moving += dp->data[Timestamp] - last_set[Timestamp]->data[Timestamp];
+    a->summary.moving +=
+        dp->data[Timestamp] - last_set[Timestamp]->data[Timestamp];
   }
 }
 
@@ -331,7 +332,8 @@ bool activity_equal(Activity *a, Activity *b) {
     return false;
 
   for (i = 0; i < DataFieldCount; i++) {
-    if ((a->last_set[i] && !b->last_set[i]) || (!a->last_set[i] && b->last_set[i]))
+    if ((a->last_set[i] && !b->last_set[i]) ||
+        (!a->last_set[i] && b->last_set[i]))
       return false;
   }
 
