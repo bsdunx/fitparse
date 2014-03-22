@@ -71,7 +71,6 @@ typedef struct {
   bool trkseg;
   Vector lap_times;
   Vector laps;
-  Vector trksegs;
   size_t lap_num;
 } State;
 
@@ -143,61 +142,85 @@ static int sax_cb(mxml_node_t *node, mxml_sax_event_t event, void *sax_data) {
         return vector_add(&(state->lap_times), (uint32_t)parse_timestamp(data));
       } else {
         parse_field(Timestamp, &(state->dp), data);
-        return vector_add(&(state->trksegs), (uint32_t)state->dp[Timestamp]);
+        return vector_add(&(state->activity->breaks), (uint32_t)state->dp[Timestamp]);
       }
+    } else if (!strcmp(name, "ele")) {
+      parse_field(Altitude, &(state->dp), data);
+    } else if (!strcmp(name, "gpxdata:hr") || !strcmp(name, "gpxtpx:hr")) {
+      parse_field(HeartRate, &(state->dp), data);
+    } else if (!strcmp(name, "gpxdata:temp") || !strcmp(name, "gpxtpx:atemp")) {
+      parse_field(Temperature, &(state->dp), data);
+    } else if (!strcmp(name, "gpxdata:cadence") || !strcmp(name, "gpxtpx:cad")) {
+      parse_field(Cadence, &(state->dp), data);
+    } else if (!strcmp(name, "gpxdata:bikepower")) {
+      parse_field(Power, &(state->dp), data);
+    } else if (!strcmp(name, "trkpt")) {
+      if (activity_add_point(state->activity, &(state->dp))) {
+        return 1;
+      }
+      if (state->dp[Timestamp] == state->lap_times[state->lap_num]) {
+        vector_add(state->laps, (uint32_t)state->activity->num_points - 1);
+        state->lap_num++;
+      }
+      if (state->trkseg) {
+        vector_add(&(state->activity->breaks), (uint32_t)state->activity->num_points - 1);
+        state->trkseg = false;
+      }
+      unset_data_point(&(state->dp));
     }
-  } else if (!strcmp(name, "ele")) {
-    parse_field(Altitude, &(state->dp), data);
-  } else if (!strcmp(name, "gpxdata:hr") || !strcmp(name, "gpxtpx:hr")) {
-    parse_field(HeartRate, &(state->dp), data);
-  } else if (!strcmp(name, "gpxdata:temp") || !strcmp(name, "gpxtpx:atemp")) {
-    parse_field(Temperature, &(state->dp), data);
-  } else if (!strcmp(name, "gpxdata:cadence") || !strcmp(name, "gpxtpx:cad")) {
-    parse_field(Cadence, &(state->dp), data);
-  } else if (!strcmp(name, "gpxdata:bikepower")) {
-    parse_field(Power, &(state->dp), data);
-  } else if (!strcmp(name, "trkpt")) {
-    if (activity_add_point(state->activity, &(state->dp))) {
-      return 1;
-    }
-    if (state->dp[Timestamp] == state->lap_times[state->lap_num]) {
-      vector_add(state->laps, (uint32_t)state->activity->num_points - 1);
-      state->lap_num++;
-    }
-    if (state->trkseg) {
-      vector_add(&(state->trksegs), (uint32_t)state->activity->num_points - 1);
-      state->trkseg = false;
-    }
-    unset_data_point(&(state->dp));
+  } else if (event == MXML_SAX_DATA) {
+    mxmlRetain(node);
   }
-}
-else if (event == MXML_SAX_DATA) {
-  mxmlRetain(node);
-}
 
-return 0;
+  return 0;
 }
 
 static void fix_laps(State *s) {
-  size_t i, state;
+  size_t i, j;
+  char tweak;
 
-  /* If there are no laps, add the default starting lap */
-  if (!state->laps && state->activity->num_points) {
-    vector_add(state->laps, 1);
+  vector_add(s->activity->laps, 1);
+
+  /* If there are no laps, add the default starting lap and if there is only
+   * one lap it is the starting lap */
+  if (!s->laps && s>activity->num_points || s->laps->size == 1) {
     return;
   }
 
-  /* If there is only one lap it is the starting lap */
+  /* If there is more than one lap and *all* of them happen to come before the
+   * end of a trkseg we know we have the case where the lap times we were given
+   * were actually lap end instead of lap start times
+   */
+  if (s->laps.size > 1 && s->activity->breaks.size > 1 &&
+      s->laps.size <= s->activity->breaks.size) {
+    i = j = 1;
+    while (i < s->laps.size && j < s->activity->breaks.size) {
+      if (s->laps->data[i] == s->activity->breaks->data[j]-1) {
+        i++;
+        j++;
+      } else if (s->laps->data[i] > s->activity->breaks->data[j]-1) {
+        j++;
+      } else {
+        match = false;
+        break;
+      }
+    }
 
-  /* TODO */
-  if (state->laps->size > 1 && state->trksegs > 1) {
+    /* tweak allows us to adjust the lap ends into lap starts as needed:
+     * we add one to the lap end index to get a lap start index, and skip
+     * one lap point (no longer necessary)
+     */
+    tweak = (i == s->laps.size);
+
+    for (i = 1; i < s->laps.size-tweak; i++) {
+      vector_add(s->activity->laps, s->laps->data[i]+tweak);
+    }
   }
 }
 
 static void clear_state(State *s) {
   if (state->laps) vector_destroy(&(state->laps));
   if (state->lap_times) vector_destroy(&(state->lap_times));
-  if (state->trksegs) vector_destroy(&(state->trksegs));
 }
 
 /**
@@ -225,7 +248,6 @@ Activity *gpx_read(FILE *f) {
     false, /* trkseg */
     NULL,  /* laps */
     NULL,  /* lap_times */
-    NULL,  /* trksegs */
     0      /* lap_num */
   } unset_data_point(&(state.dp));
 
@@ -241,11 +263,9 @@ Activity *gpx_read(FILE *f) {
   state.activity->format = GPX;
 
   if (state.laps) {
-    /* Laps we have are timestamps instead of indices and could be end times */
+    /* The lap indices we have could be end instead of start times */
     fix_laps(&state);
-    activity_add_laps(&(state.laps))
   }
-  if (state.trksegs) activity_add_breaks(&(state.trksegs))
 
   clear_state(&state);
   mxmlDelete(tree);
